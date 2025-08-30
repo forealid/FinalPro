@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalR Analytics Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --primary-bg: #0a0b0f;
+            --secondary-bg: #1a1d24;
+            --card-bg: #252832;
+            --glass-bg: rgba(37, 40, 50, 0.8);
+            --accent-green: #00ff88;
+            --accent-blue: #0099ff;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #ff6b35;
+            --accent-red: #ff3366;
+            --accent-cyan: #22d3ee;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            --text-muted: #495670;
+            --border-color: #2d3142;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+            --shadow-intense: 0 8px 64px rgba(0, 0, 0, 0.5);
+            --glow: 0 0 20px rgba(0, 255, 136, 0.15);
+            --glow-blue: 0 0 20px rgba(0, 153, 255, 0.15);
+            --glow-purple: 0 0 20px rgba(139, 92, 246, 0.15);
+            --gradient-primary: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            --gradient-secondary: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            --gradient-danger: linear-gradient(135deg, var(--accent-red), #dc2626);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 153, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(26, 29, 36, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: var(--glow);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+        }
+
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-tab {
+            padding: 0.875rem 1.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        .nav-tab::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            padding: 1px;
+            background: var(--gradient-primary);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: xor;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: var(--gradient-primary);
+            color: var(--text-primary);
+            box-shadow: var(--glow);
+            transform: translateY(-1px);
+        }
+
+        .nav-tab.active::before {
+            opacity: 1;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--danger);
+            animation: pulse 2s infinite;
+            position: relative;
+        }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            opacity: 0.3;
+            animation: ripple 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+            color: var(--success);
+        }
+
+        .status-dot.connecting {
+            background: var(--warning);
+            color: var(--warning);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.3; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            gap: 2rem;
+        }
+
+        /* Card System */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: xor;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-intense);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            padding: 2rem 2.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        .card-title {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-body {
+            padding: 2.5rem;
+        }
+
+        /* Connection Tab */
+        .connection-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1.25rem;
+            background: rgba(26, 29, 36, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+            background: rgba(26, 29, 36, 0.95);
+        }
+
+        .button {
+            padding: 1.25rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .button:hover:before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--gradient-danger);
+            color: white;
+            box-shadow: 0 8px 24px rgba(255, 51, 102, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gradient-secondary);
+            color: white;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--accent-orange), #ea580c);
+            color: white;
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+            box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3);
+        }
+
+        .btn-import {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(26, 29, 36, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.03);
+            border-color: var(--accent-green);
+            box-shadow: var(--glow);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+            font-weight: 600;
+        }
+
+        /* Crash History */
+        .crash-history {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .crash-value {
+            padding: 0.75rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .crash-value::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 25px;
+            background: inherit;
+            opacity: 0.2;
+            transform: scale(0);
+            transition: transform 0.3s ease;
+        }
+
+        .crash-value:hover::before {
+            transform: scale(1);
+        }
+
+        .crash-value.win {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .crash-value.loss {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .crash-value:hover {
+            transform: scale(1.1) translateY(-2px);
+        }
+
+        /* Statistics Table */
+        .table-container {
+            background: rgba(26, 29, 36, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, var(--card-bg), rgba(37, 40, 50, 0.8));
+            padding: 1.5rem 1rem;
+            text-align: center;
+            font-weight: 700;
+            color: var(--accent-green);
+            border-bottom: 2px solid var(--accent-green);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.875rem;
+        }
+
+        .table td {
+            padding: 1.25rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .table .time-cell {
+            background: linear-gradient(135deg, var(--card-bg), rgba(37, 40, 50, 0.9));
+            font-weight: 700;
+            color: var(--text-primary);
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            border-right: 2px solid var(--accent-green);
+        }
+
+        .cell-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .win-rate {
+            font-weight: 800;
+            font-size: 1.125rem;
+        }
+
+        .win-rate.high { 
+            background: linear-gradient(135deg, var(--success), #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .win-rate.medium { 
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .win-rate.low { 
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .loss-streak {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(16, 20, 31, 0.8);
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .martingale-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-top: 0.5rem;
+            box-shadow: 0 0 12px currentColor;
+            position: relative;
+        }
+
+        .martingale-indicator::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 1px solid currentColor;
+            opacity: 0.3;
+        }
+
+        .martingale-safe { background: var(--success); color: var(--success); }
+        .martingale-risky { background: var(--warning); color: var(--warning); }
+        .martingale-dangerous { background: var(--danger); color: var(--danger); }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .filter-select {
+            padding: 1rem 1.5rem;
+            background: rgba(26, 29, 36, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .legend {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: rgba(26, 29, 36, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-secondary);
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: var(--gradient-secondary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .summary-stat {
+            text-align: center;
+        }
+
+        .summary-stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .summary-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Log */
+        .log-container {
+            background: rgba(16, 20, 31, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+            font-size: 0.875rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .log-entry {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            white-space: pre-wrap;
+            transition: background 0.2s ease;
+        }
+
+        .log-entry:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .log-entry.info { color: var(--accent-blue); }
+        .log-entry.success { color: var(--success); }
+        .log-entry.warning { color: var(--warning); }
+        .log-entry.error { color: var(--danger); }
+        .log-entry.crash { 
+            background: rgba(0, 255, 136, 0.05);
+            color: var(--accent-green);
+            font-weight: 700;
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .timestamp {
+            color: var(--text-muted);
+            margin-right: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* File Input Styling */
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.25rem 2rem;
+            background: var(--gradient-secondary);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Database Management Section */
+        .db-management {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .db-card {
+            background: rgba(26, 29, 36, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .db-card h4 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .db-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .connection-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .db-management {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .legend {
+                justify-content: center;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Enhanced Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid var(--accent-green);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-color: var(--success);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .notification.error {
+            border-color: var(--danger);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .notification.info {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(0, 153, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <div class="logo-text">SignalR Analytics Pro</div>
+                </div>
+                
+                <nav class="nav-tabs">
+                    <button class="nav-tab active" onclick="switchTab('connection')">Connection</button>
+                    <button class="nav-tab" onclick="switchTab('statistics')">Statistics</button>
+                    <button class="nav-tab" onclick="switchTab('database')">Database</button>
+                </nav>
+                
+                <div class="connection-status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Disconnected</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Connection Tab -->
+            <div id="connectionTab" class="tab-content active">
+                <div class="connection-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🔗 Connection Settings</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group">
+                                <label class="input-label">WebSocket URL</label>
+                                <input type="text" id="wsUrl" class="input-field" 
+                                       placeholder="wss://example.com/socket">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label class="input-label">Account ID</label>
+                                <input type="text" id="accountId" class="input-field" 
+                                       placeholder="123456789">
+                            </div>
+                            
+                            <div class="button-group">
+                                <button id="connectBtn" class="button btn-primary" onclick="toggleConnection()">
+                                    Connect
+                                </button>
+                                <button class="button btn-secondary" onclick="testWithSampleData()">
+                                    Test Sample
+                                </button>
+                                <button class="button btn-warning" onclick="clearLog()">
+                                    Clear Log
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📊 Live Metrics</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="messagesReceived">0</div>
+                                    <div class="stat-label">Messages</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="lastCrashValue">--</div>
+                                    <div class="stat-label">Last Crash</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="connectionTime">--</div>
+                                    <div class="stat-label">Uptime</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="sessionWinRate">--</div>
+                                    <div class="stat-label">Session Win Rate</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="currentStreak">--</div>
+                                    <div class="stat-label">Current Streak</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="framesProcessed">0</div>
+                                    <div class="stat-label">Frames</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Recent Crash History</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="crash-history" id="crashHistory">
+                            <span style="color: var(--text-muted);">No crash data yet</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📝 Protocol Log</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-container" id="log"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="statisticsTab" class="tab-content">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h4 class="summary-title">🏆 Performance Overview</h4>
+                        <div class="summary-stats">
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="totalCrashes">0</div>
+                                <div class="summary-stat-label">Total Crashes</div>
+                            </div>
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="overallWinRate">--</div>
+                                <div class="summary-stat-label">Win Rate</div>
+                            </div>
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="bestHour">--</div>
+                                <div class="summary-stat-label">Best Hour</div>
+                            </div>
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="worstHour">--</div>
+                                <div class="summary-stat-label">Worst Hour</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <h4 class="summary-title">⚠️ Risk Analysis</h4>
+                        <div class="summary-stats">
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="maxLossStreak">0</div>
+                                <div class="summary-stat-label">Max Loss Streak</div>
+                            </div>
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="safeHours">--</div>
+                                <div class="summary-stat-label">Safe Hours</div>
+                            </div>
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="riskyHours">--</div>
+                                <div class="summary-stat-label">Risky Hours</div>
+                            </div>
+                            <div class="summary-stat">
+                                <div class="summary-stat-value" id="dangerousHours">--</div>
+                                <div class="summary-stat-label">Dangerous Hours</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="controls">
+                            <div>
+                                <label>View: </label>
+                                <select id="viewMode" class="filter-select" onchange="updateStatsTable()">
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="all">All Time</option>
+                                </select>
+                            </div>
+                            
+                            <div class="button-group">
+                                <button class="button btn-secondary" onclick="generateSampleStats()">
+                                    Generate Sample
+                                </button>
+                                <button class="button btn-warning" onclick="clearStatistics()">
+                                    Clear Stats
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-dot martingale-safe"></div>
+                                <span>Safe (≥65% WR, ≤4 Loss)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot martingale-risky"></div>
+                                <span>Risky (50-64% WR, 5-7 Loss)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot martingale-dangerous"></div>
+                                <span>Dangerous (<50% WR, ≥8 Loss)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body" style="padding: 0;">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th class="time-cell">Time</th>
+                                        <th>Sun</th>
+                                        <th>Mon</th>
+                                        <th>Tue</th>
+                                        <th>Wed</th>
+                                        <th>Thu</th>
+                                        <th>Fri</th>
+                                        <th>Sat</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Tab -->
+            <div id="databaseTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">💾 Database Management</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="db-management">
+                            <div class="db-card">
+                                <h4>📤 Export Database</h4>
+                                <p>Download your complete statistics database as a JSON file. This includes all crash history, win rates, and analytics data.</p>
+                                <button class="button btn-export" onclick="exportDatabase()">
+                                    📥 Export Data
+                                </button>
+                            </div>
+
+                            <div class="db-card">
+                                <h4>📥 Import Database</h4>
+                                <p>Upload a previously exported database file to restore your analytics data. This will merge with existing data.</p>
+                                <input type="file" id="importFile" class="file-input" accept=".json" onchange="importDatabase(event)">
+                                <label for="importFile" class="file-input-label">
+                                    📤 Choose File
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 3rem;">
+                            <div class="summary-grid">
+                                <div class="summary-card">
+                                    <h4 class="summary-title">📊 Database Statistics</h4>
+                                    <div class="summary-stats">
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbRecords">0</div>
+                                            <div class="summary-stat-label">Total Records</div>
+                                        </div>
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbSize">0 KB</div>
+                                            <div class="summary-stat-label">Database Size</div>
+                                        </div>
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbOldest">--</div>
+                                            <div class="summary-stat-label">Oldest Record</div>
+                                        </div>
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbNewest">--</div>
+                                            <div class="summary-stat-label">Newest Record</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="summary-card">
+                                    <h4 class="summary-title">🔧 Database Actions</h4>
+                                    <div class="button-group" style="margin-top: 1rem;">
+                                        <button class="button btn-secondary" onclick="validateDatabase()">
+                                            🔍 Validate Data
+                                        </button>
+                                        <button class="button btn-warning" onclick="compactDatabase()">
+                                            🗜️ Compact DB
+                                        </button>
+                                        <button class="button btn-danger" onclick="resetDatabase()">
+                                            🗑️ Reset All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Database Log</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-container" id="dbLog"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        class SignalRAnalytics {
+            constructor() {
+                this.websocket = null;
+                this.messagesReceived = 0;
+                this.framesProcessed = 0;
+                this.connectionStartTime = null;
+                this.connectionTimeInterval = null;
+                this.crashHistory = [];
+                this.sessionCrashes = [];
+                this.currentStreak = 0;
+                this.streakType = 'none';
+                
+                this.statistics = this.loadStatistics();
+                
+                this.init();
+            }
+
+            init() {
+                this.log('SignalR Analytics Pro initialized', 'success');
+                this.updateStatsTable();
+                this.updateSummaryCards();
+                this.updateDatabaseStats();
+                this.dbLog('Database system ready', 'success');
+            }
+
+            // Storage Management with Error Handling
+            loadStatistics() {
+                try {
+                    const saved = localStorage.getItem('signalr_statistics');
+                    const data = saved ? JSON.parse(saved) : {};
+                    this.dbLog(`Loaded ${Object.keys(data).length} records from local storage`, 'info');
+                    return data;
+                } catch (error) {
+                    this.dbLog(`Failed to load statistics: ${error.message}`, 'error');
+                    this.showNotification('Failed to load database', 'error');
+                    return {};
+                }
+            }
+
+            saveStatistics() {
+                try {
+                    const dataStr = JSON.stringify(this.statistics);
+                    localStorage.setItem('signalr_statistics', dataStr);
+                    this.updateDatabaseStats();
+                    this.dbLog(`Saved ${Object.keys(this.statistics).length} records to local storage`, 'success');
+                } catch (error) {
+                    this.dbLog(`Failed to save statistics: ${error.message}`, 'error');
+                    this.showNotification('Failed to save data', 'error');
+                }
+            }
+
+            // Database Export Function
+            exportDatabase() {
+                try {
+                    const exportData = {
+                        version: '2.0',
+                        exportDate: new Date().toISOString(),
+                        statistics: this.statistics,
+                        metadata: {
+                            totalRecords: Object.keys(this.statistics).length,
+                            exportedBy: 'SignalR Analytics Pro'
+                        }
+                    };
+
+                    const dataStr = JSON.stringify(exportData, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `signalr-analytics-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+
+                    this.dbLog(`Database exported successfully (${Object.keys(this.statistics).length} records)`, 'success');
+                    this.showNotification('Database exported successfully!', 'success');
+                } catch (error) {
+                    this.dbLog(`Export failed: ${error.message}`, 'error');
+                    this.showNotification('Export failed', 'error');
+                }
+            }
+
+            // Database Import Function
+            importDatabase(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importData = JSON.parse(e.target.result);
+                        
+                        // Validate import data structure
+                        if (!importData.statistics) {
+                            throw new Error('Invalid file format - no statistics data found');
+                        }
+
+                        // Backup current data
+                        const backup = { ...this.statistics };
+                        
+                        // Merge imported data
+                        let importedRecords = 0;
+                        let updatedRecords = 0;
+                        
+                        Object.entries(importData.statistics).forEach(([key, value]) => {
+                            if (this.statistics[key]) {
+                                // Merge existing record
+                                this.statistics[key] = {
+                                    ...this.statistics[key],
+                                    ...value,
+                                    crashes: [...(this.statistics[key].crashes || []), ...(value.crashes || [])]
+                                };
+                                updatedRecords++;
+                            } else {
+                                // Add new record
+                                this.statistics[key] = value;
+                                importedRecords++;
+                            }
+                        });
+
+                        this.saveStatistics();
+                        this.updateStatsTable();
+                        this.updateSummaryCards();
+                        this.updateDatabaseStats();
+
+                        this.dbLog(`Import completed: ${importedRecords} new records, ${updatedRecords} updated`, 'success');
+                        this.showNotification(`Imported ${importedRecords + updatedRecords} records!`, 'success');
+                        
+                        // Reset file input
+                        event.target.value = '';
+                        
+                    } catch (error) {
+                        this.dbLog(`Import failed: ${error.message}`, 'error');
+                        this.showNotification(`Import failed: ${error.message}`, 'error');
+                        event.target.value = '';
+                    }
+                };
+                
+                reader.readAsText(file);
+                this.dbLog(`Starting import of file: ${file.name}`, 'info');
+            }
+
+            // Database Validation
+            validateDatabase() {
+                this.dbLog('Starting database validation...', 'info');
+                
+                let validRecords = 0;
+                let invalidRecords = 0;
+                let fixedRecords = 0;
+                const errors = [];
+
+                Object.entries(this.statistics).forEach(([key, record]) => {
+                    try {
+                        // Check required fields
+                        if (!record.day === undefined || !record.hour === undefined || !record.date) {
+                            errors.push(`Record ${key}: Missing required fields`);
+                            invalidRecords++;
+                            return;
+                        }
+
+                        // Validate data types
+                        if (typeof record.day !== 'number' || typeof record.hour !== 'number') {
+                            errors.push(`Record ${key}: Invalid data types`);
+                            invalidRecords++;
+                            return;
+                        }
+
+                        // Validate ranges
+                        if (record.day < 0 || record.day > 6 || record.hour < 0 || record.hour > 23) {
+                            errors.push(`Record ${key}: Values out of range`);
+                            invalidRecords++;
+                            return;
+                        }
+
+                        // Fix missing arrays
+                        if (!Array.isArray(record.crashes)) {
+                            record.crashes = [];
+                            fixedRecords++;
+                        }
+
+                        // Recalculate stats if needed
+                        if (record.crashes.length > 0 && (!record.wins || !record.losses)) {
+                            record.wins = record.crashes.filter(c => c.win || c.value >= 2.0).length;
+                            record.losses = record.crashes.length - record.wins;
+                            fixedRecords++;
+                        }
+
+                        validRecords++;
+                    } catch (error) {
+                        errors.push(`Record ${key}: ${error.message}`);
+                        invalidRecords++;
+                    }
+                });
+
+                if (fixedRecords > 0) {
+                    this.saveStatistics();
+                }
+
+                const message = `Validation complete: ${validRecords} valid, ${invalidRecords} invalid, ${fixedRecords} fixed`;
+                this.dbLog(message, invalidRecords > 0 ? 'warning' : 'success');
+                
+                if (errors.length > 0) {
+                    errors.slice(0, 5).forEach(error => this.dbLog(error, 'error'));
+                    if (errors.length > 5) {
+                        this.dbLog(`... and ${errors.length - 5} more errors`, 'warning');
+                    }
+                }
+
+                this.showNotification(message, invalidRecords > 0 ? 'error' : 'success');
+            }
+
+            // Database Compaction
+            compactDatabase() {
+                const originalSize = Object.keys(this.statistics).length;
+                let removedRecords = 0;
+
+                // Remove records with no crash data
+                Object.entries(this.statistics).forEach(([key, record]) => {
+                    if (!record.crashes || record.crashes.length === 0) {
+                        delete this.statistics[key];
+                        removedRecords++;
+                    }
+                });
+
+                this.saveStatistics();
+                this.updateStatsTable();
+                this.updateSummaryCards();
+                this.updateDatabaseStats();
+
+                const message = `Database compacted: removed ${removedRecords} empty records (${originalSize} → ${Object.keys(this.statistics).length})`;
+                this.dbLog(message, 'success');
+                this.showNotification(`Removed ${removedRecords} empty records`, 'success');
+            }
+
+            // Database Reset
+            resetDatabase() {
+                if (confirm('⚠️ This will permanently delete ALL analytics data. This action cannot be undone!\n\nAre you absolutely sure?')) {
+                    if (confirm('🚨 FINAL WARNING: All statistics will be lost forever. Continue?')) {
+                        this.statistics = {};
+                        this.saveStatistics();
+                        this.updateStatsTable();
+                        this.updateSummaryCards();
+                        this.updateDatabaseStats();
+                        
+                        this.dbLog('Database reset completed - all data cleared', 'warning');
+                        this.showNotification('Database has been reset', 'info');
+                    }
+                }
+            }
+
+            // Update Database Statistics Display
+            updateDatabaseStats() {
+                try {
+                    const records = Object.keys(this.statistics).length;
+                    const dataStr = JSON.stringify(this.statistics);
+                    const sizeKB = Math.round((dataStr.length * 2) / 1024); // Approximate size in KB
+                    
+                    let oldestDate = null;
+                    let newestDate = null;
+                    
+                    Object.values(this.statistics).forEach(record => {
+                        if (record.date) {
+                            const date = new Date(record.date);
+                            if (!oldestDate || date < oldestDate) oldestDate = date;
+                            if (!newestDate || date > newestDate) newestDate = date;
+                        }
+                    });
+
+                    document.getElementById('dbRecords').textContent = records.toLocaleString();
+                    document.getElementById('dbSize').textContent = `${sizeKB} KB`;
+                    document.getElementById('dbOldest').textContent = oldestDate ? 
+                        oldestDate.toLocaleDateString() : '--';
+                    document.getElementById('dbNewest').textContent = newestDate ? 
+                        newestDate.toLocaleDateString() : '--';
+                } catch (error) {
+                    this.dbLog(`Failed to update database stats: ${error.message}`, 'error');
+                }
+            }
+
+            // Notification System
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // Show notification
+                setTimeout(() => notification.classList.add('show'), 100);
+                
+                // Hide and remove notification
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(notification), 300);
+                }, 3000);
+            }
+
+            // Database Log (separate from main log)
+            dbLog(message, type = 'info') {
+                const container = document.getElementById('dbLog');
+                if (!container) return;
+
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString();
+                entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+                
+                container.appendChild(entry);
+                container.scrollTop = container.scrollHeight;
+                
+                // Keep only last 50 entries
+                while (container.children.length > 50) {
+                    container.removeChild(container.firstChild);
+                }
+            }
+
+            getTimeKey() {
+                const now = new Date();
+                return {
+                    day: now.getDay(),
+                    hour: now.getHours(),
+                    date: now.toDateString()
+                };
+            }
+
+            recordCrash(value) {
+                const { day, hour, date } = this.getTimeKey();
+                const key = `${date}_${hour}`;
+                
+                if (!this.statistics[key]) {
+                    this.statistics[key] = {
+                        day, hour, date,
+                        crashes: [],
+                        wins: 0,
+                        losses: 0,
+                        maxLossStreak: 0,
+                        currentLossStreak: 0
+                    };
+                }
+
+                const stats = this.statistics[key];
+                const isWin = value >= 2.0;
+                
+                stats.crashes.push({ value, timestamp: Date.now(), win: isWin });
+                
+                if (isWin) {
+                    stats.wins++;
+                    stats.currentLossStreak = 0;
+                } else {
+                    stats.losses++;
+                    stats.currentLossStreak++;
+                    stats.maxLossStreak = Math.max(stats.maxLossStreak, stats.currentLossStreak);
+                }
+
+                this.saveStatistics();
+                this.updateStatsTable();
+                this.updateSummaryCards();
+            }
+
+            getMartingaleSafety(winRate, maxLossStreak) {
+                if (winRate >= 65 && maxLossStreak <= 4) return 'safe';
+                if (winRate >= 50 && maxLossStreak <= 7) return 'risky';
+                return 'dangerous';
+            }
+
+            updateStatsTable() {
+                const tbody = document.getElementById('statsTableBody');
+                const viewMode = document.getElementById('viewMode').value;
+                
+                tbody.innerHTML = '';
+
+                for (let hour = 0; hour < 24; hour++) {
+                    const row = document.createElement('tr');
+                    
+                    const timeCell = document.createElement('td');
+                    timeCell.className = 'time-cell';
+                    timeCell.textContent = `${hour.toString().padStart(2, '0')}:00`;
+                    row.appendChild(timeCell);
+
+                    for (let day = 0; day < 7; day++) {
+                        const cell = document.createElement('td');
+                        const cellContent = document.createElement('div');
+                        cellContent.className = 'cell-content';
+
+                        const dayStats = this.getStatsForDayHour(day, hour, viewMode);
+                        
+                        if (dayStats.totalCrashes > 0) {
+                            const winRate = Math.round((dayStats.wins / dayStats.totalCrashes) * 100);
+                            const maxLossStreak = dayStats.maxLossStreak;
+                            
+                            const winRateSpan = document.createElement('span');
+                            winRateSpan.className = `win-rate ${this.getWinRateClass(winRate)}`;
+                            winRateSpan.textContent = `${winRate}%`;
+                            
+                            const lossStreakSpan = document.createElement('span');
+                            lossStreakSpan.className = 'loss-streak';
+                            lossStreakSpan.textContent = `L${maxLossStreak}`;
+                            
+                            const indicator = document.createElement('div');
+                            indicator.className = `martingale-indicator martingale-${this.getMartingaleSafety(winRate, maxLossStreak)}`;
+                            
+                            cellContent.appendChild(winRateSpan);
+                            cellContent.appendChild(lossStreakSpan);
+                            cellContent.appendChild(indicator);
+                        } else {
+                            const naSpan = document.createElement('span');
+                            naSpan.textContent = 'N/A';
+                            naSpan.style.color = 'var(--text-muted)';
+                            cellContent.appendChild(naSpan);
+                        }
+
+                        cell.appendChild(cellContent);
+                        row.appendChild(cell);
+                    }
+
+                    tbody.appendChild(row);
+                }
+            }
+
+            getStatsForDayHour(day, hour, viewMode) {
+                const result = { totalCrashes: 0, wins: 0, maxLossStreak: 0 };
+                const cutoffDate = this.getCutoffDate(viewMode);
+
+                Object.values(this.statistics).forEach(stats => {
+                    if (stats.day === day && stats.hour === hour) {
+                        const statsDate = new Date(stats.date);
+                        if (statsDate >= cutoffDate) {
+                            result.totalCrashes += stats.crashes.length;
+                            result.wins += stats.wins;
+                            result.maxLossStreak = Math.max(result.maxLossStreak, stats.maxLossStreak);
+                        }
+                    }
+                });
+
+                return result;
+            }
+
+            getCutoffDate(viewMode) {
+                const now = new Date();
+                switch (viewMode) {
+                    case 'week':
+                        const weekStart = new Date(now);
+                        weekStart.setDate(now.getDate() - now.getDay());
+                        weekStart.setHours(0, 0, 0, 0);
+                        return weekStart;
+                    case 'month':
+                        return new Date(now.getFullYear(), now.getMonth(), 1);
+                    default:
+                        return new Date(0);
+                }
+            }
+
+            getWinRateClass(winRate) {
+                if (winRate >= 65) return 'high';
+                if (winRate >= 50) return 'medium';
+                return 'low';
+            }
+
+            updateSummaryCards() {
+                const stats = this.calculateOverallStats();
+                
+                document.getElementById('totalCrashes').textContent = stats.totalCrashes;
+                document.getElementById('overallWinRate').textContent = 
+                    stats.totalCrashes > 0 ? `${Math.round(stats.overallWinRate)}%` : '--';
+                document.getElementById('bestHour').textContent = stats.bestHour;
+                document.getElementById('worstHour').textContent = stats.worstHour;
+                document.getElementById('maxLossStreak').textContent = stats.maxLossStreak;
+                document.getElementById('safeHours').textContent = stats.safeHours;
+                document.getElementById('riskyHours').textContent = stats.riskyHours;
+                document.getElementById('dangerousHours').textContent = stats.dangerousHours;
+            }
+
+            calculateOverallStats() {
+                let totalCrashes = 0;
+                let totalWins = 0;
+                let maxLossStreak = 0;
+                let bestHour = { hour: '--', winRate: 0 };
+                let worstHour = { hour: '--', winRate: 100 };
+                let safeHours = 0;
+                let riskyHours = 0;
+                let dangerousHours = 0;
+
+                const hourStats = {};
+                
+                Object.values(this.statistics).forEach(stats => {
+                    totalCrashes += stats.crashes.length;
+                    totalWins += stats.wins;
+                    maxLossStreak = Math.max(maxLossStreak, stats.maxLossStreak);
+
+                    const hour = stats.hour;
+                    if (!hourStats[hour]) {
+                        hourStats[hour] = { crashes: 0, wins: 0, maxLoss: 0 };
+                    }
+                    
+                    hourStats[hour].crashes += stats.crashes.length;
+                    hourStats[hour].wins += stats.wins;
+                    hourStats[hour].maxLoss = Math.max(hourStats[hour].maxLoss, stats.maxLossStreak);
+                });
+
+                Object.entries(hourStats).forEach(([hour, stats]) => {
+                    if (stats.crashes > 0) {
+                        const winRate = (stats.wins / stats.crashes) * 100;
+                        const hourStr = `${hour.padStart(2, '0')}:00`;
+                        
+                        if (winRate > bestHour.winRate) {
+                            bestHour = { hour: hourStr, winRate };
+                        }
+                        if (winRate < worstHour.winRate) {
+                            worstHour = { hour: hourStr, winRate };
+                        }
+
+                        const safety = this.getMartingaleSafety(winRate, stats.maxLoss);
+                        switch (safety) {
+                            case 'safe': safeHours++; break;
+                            case 'risky': riskyHours++; break;
+                            case 'dangerous': dangerousHours++; break;
+                        }
+                    }
+                });
+
+                return {
+                    totalCrashes,
+                    overallWinRate: totalCrashes > 0 ? (totalWins / totalCrashes) * 100 : 0,
+                    maxLossStreak,
+                    bestHour: bestHour.hour,
+                    worstHour: worstHour.hour,
+                    safeHours,
+                    riskyHours,
+                    dangerousHours
+                };
+            }
+
+            connect() {
+                const url = document.getElementById('wsUrl').value.trim();
+                const accountId = document.getElementById('accountId').value.trim();
+                
+                if (!url) {
+                    this.log('Please enter a WebSocket URL', 'error');
+                    return;
+                }
+
+                this.log(`Connecting to ${url}...`, 'info');
+                this.updateConnectionStatus('connecting');
+
+                try {
+                    this.websocket = new WebSocket(url);
+
+                    this.websocket.onopen = () => {
+                        this.connectionStartTime = new Date();
+                        this.updateConnectionStatus('connected');
+                        this.log('WebSocket connected successfully', 'success');
+                        this.startConnectionTimer();
+                        this.sendHandshake();
+                        if (accountId) {
+                            setTimeout(() => this.sendAccountSubscription(accountId), 100);
+                        }
+                    };
+
+                    this.websocket.onmessage = (event) => this.handleMessage(event.data);
+                    this.websocket.onclose = (event) => {
+                        this.updateConnectionStatus('disconnected');
+                        this.log(`Connection closed (Code: ${event.code})`, 'warning');
+                        this.stopConnectionTimer();
+                    };
+                    this.websocket.onerror = () => {
+                        this.log('WebSocket error occurred', 'error');
+                        this.updateConnectionStatus('disconnected');
+                    };
+                } catch (error) {
+                    this.log(`Failed to connect: ${error.message}`, 'error');
+                    this.updateConnectionStatus('disconnected');
+                }
+            }
+
+            disconnect() {
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                    this.log('Disconnected by user', 'info');
+                    this.stopConnectionTimer();
+                }
+            }
+
+            sendHandshake() {
+                const handshake = { protocol: "json", version: 1 };
+                const message = JSON.stringify(handshake) + "\u001e";
+                this.websocket.send(message);
+                this.log('Sent handshake: ' + JSON.stringify(handshake), 'info');
+            }
+
+            sendAccountSubscription(accountId) {
+                const subscription = {
+                    arguments: [{ activity: 30, account: parseInt(accountId) }],
+                    invocationId: "1",
+                    target: "Account",
+                    type: 1
+                };
+                const message = JSON.stringify(subscription) + "\u001e";
+                this.websocket.send(message);
+                this.log('Sent account subscription: ' + JSON.stringify(subscription), 'info');
+            }
+
+            handleMessage(data) {
+                this.messagesReceived++;
+                document.getElementById('messagesReceived').textContent = this.messagesReceived;
+
+                const frames = data.split("\u001e").filter(f => f.trim().length > 0);
+                this.log(`Received ${frames.length} frame(s)`, 'info');
+
+                frames.forEach(frame => this.processFrame(frame));
+            }
+
+            processFrame(frame) {
+                this.framesProcessed++;
+                document.getElementById('framesProcessed').textContent = this.framesProcessed;
+
+                try {
+                    if (!frame.trim()) {
+                        this.log('Empty frame (keepalive)', 'info');
+                        return;
+                    }
+
+                    const message = JSON.parse(frame);
+                    this.log(`Frame: ${JSON.stringify(message)}`, 'info');
+                    this.handleSignalRMessage(message);
+                } catch (error) {
+                    this.log(`Non-JSON frame: "${frame}"`, 'warning');
+                }
+            }
+
+            handleSignalRMessage(message) {
+                switch (message.type) {
+                    case 1: this.handleInvocation(message); break;
+                    case 6: this.log('Ping received', 'info'); break;
+                    default:
+                        if (message.target) this.handleInvocation(message);
+                        else this.log(`Unknown message type: ${message.type}`, 'warning');
+                }
+            }
+
+            handleInvocation(message) {
+                const target = message.target;
+                const args = message.arguments || [];
+
+                this.log(`Invocation: ${target}`, 'success');
+
+                switch (target) {
+                    case 'OnCrash': this.handleOnCrash(args); break;
+                    case 'OnRegistration': this.handleOnRegistration(args); break;
+                    default: this.log(`Unknown target: ${target}`, 'info');
+                }
+            }
+
+            handleOnCrash(args) {
+                if (args.length > 0 && args[0].f !== undefined) {
+                    const crashValue = args[0].f;
+                    const isWin = crashValue >= 2.0;
+                    
+                    this.log(`CRASH: ${crashValue} ${isWin ? '(WIN)' : '(LOSS)'}`, 'crash');
+                    
+                    document.getElementById('lastCrashValue').textContent = crashValue.toFixed(2);
+                    this.addToCrashHistory(crashValue);
+                    this.recordCrash(crashValue);
+                    this.updateSessionStats(crashValue);
+                }
+            }
+
+            handleOnRegistration(args) {
+                if (args.length > 0 && args[0].fs) {
+                    const historyValues = args[0].fs;
+                    this.log(`Registration history: ${historyValues.length} values`, 'success');
+                    
+                    historyValues.forEach((entry, index) => {
+                        if (entry.f !== undefined) {
+                            const isWin = entry.f >= 2.0;
+                            this.log(`History[${index}]: ${entry.f} ${isWin ? '(WIN)' : '(LOSS)'}`, 'info');
+                            this.addToCrashHistory(entry.f);
+                            this.recordCrash(entry.f);
+                        }
+                    });
+                    this.updateSessionStats();
+                }
+            }
+
+            updateSessionStats(newValue = null) {
+                if (newValue !== null) {
+                    const isWin = newValue >= 2.0;
+                    this.sessionCrashes.push({ value: newValue, win: isWin });
+                    
+                    if (isWin) {
+                        if (this.streakType === 'win') this.currentStreak++;
+                        else { this.currentStreak = 1; this.streakType = 'win'; }
+                    } else {
+                        if (this.streakType === 'loss') this.currentStreak++;
+                        else { this.currentStreak = 1; this.streakType = 'loss'; }
+                    }
+                }
+
+                if (this.sessionCrashes.length > 0) {
+                    const wins = this.sessionCrashes.filter(c => c.win).length;
+                    const winRate = Math.round((wins / this.sessionCrashes.length) * 100);
+                    document.getElementById('sessionWinRate').textContent = `${winRate}%`;
+                } else {
+                    document.getElementById('sessionWinRate').textContent = '--';
+                }
+
+                if (this.currentStreak > 0) {
+                    const streakDisplay = `${this.streakType === 'win' ? 'W' : 'L'}${this.currentStreak}`;
+                    document.getElementById('currentStreak').textContent = streakDisplay;
+                } else {
+                    document.getElementById('currentStreak').textContent = '--';
+                }
+            }
+
+            addToCrashHistory(value) {
+                this.crashHistory.unshift(value);
+                if (this.crashHistory.length > 20) {
+                    this.crashHistory = this.crashHistory.slice(0, 20);
+                }
+                this.updateCrashHistoryDisplay();
+            }
+
+            updateCrashHistoryDisplay() {
+                const container = document.getElementById('crashHistory');
+                
+                if (this.crashHistory.length === 0) {
+                    container.innerHTML = '<span style="color: var(--text-muted);">No crash data yet</span>';
+                    return;
+                }
+                
+                container.innerHTML = this.crashHistory
+                    .map(value => {
+                        const isWin = value >= 2.0;
+                        return `<span class="crash-value ${isWin ? 'win' : 'loss'}">${value.toFixed(2)}${isWin ? '✓' : '✗'}</span>`;
+                    })
+                    .join('');
+            }
+
+            updateConnectionStatus(status) {
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                const btn = document.getElementById('connectBtn');
+
+                dot.className = `status-dot ${status}`;
+                
+                switch (status) {
+                    case 'connected':
+                        text.textContent = 'Connected';
+                        btn.textContent = 'Disconnect';
+                        btn.className = 'button btn-danger';
+                        break;
+                    case 'connecting':
+                        text.textContent = 'Connecting...';
+                        btn.textContent = 'Connecting...';
+                        btn.disabled = true;
+                        break;
+                    default:
+                        text.textContent = 'Disconnected';
+                        btn.textContent = 'Connect';
+                        btn.className = 'button btn-primary';
+                        btn.disabled = false;
+                }
+            }
+
+            startConnectionTimer() {
+                this.connectionTimeInterval = setInterval(() => {
+                    if (this.connectionStartTime) {
+                        const elapsed = new Date() - this.connectionStartTime;
+                        const minutes = Math.floor(elapsed / 60000);
+                        const seconds = Math.floor((elapsed % 60000) / 1000);
+                        document.getElementById('connectionTime').textContent = 
+                            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+            }
+
+            stopConnectionTimer() {
+                if (this.connectionTimeInterval) {
+                    clearInterval(this.connectionTimeInterval);
+                    this.connectionTimeInterval = null;
+                    document.getElementById('connectionTime').textContent = '--';
+                }
+            }
+
+            log(message, type = 'info') {
+                const container = document.getElementById('log');
+                if (!container) return;
+
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString();
+                entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+                
+                container.appendChild(entry);
+                container.scrollTop = container.scrollHeight;
+                
+                while (container.children.length > 100) {
+                    container.removeChild(container.firstChild);
+                }
+            }
+
+            testWithSampleData() {
+                this.log('Testing with sample data...', 'info');
+                
+                const frames = [
+                    '{}',
+                    '{"type":1,"target":"OnRegistration","arguments":[{"fs":[{"f":2.45},{"f":1.67},{"f":3.21},{"f":1.23},{"f":5.67}]}]}',
+                    '{"type":1,"target":"OnCrash","arguments":[{"f":2.89}]}',
+                    '{"type":1,"target":"OnCrash","arguments":[{"f":1.45}]}',
+                    '{"type":1,"target":"OnCrash","arguments":[{"f":7.23}]}',
+                    '{"type":1,"target":"OnCrash","arguments":[{"f":1.89}]}',
+                    '{"type":1,"target":"OnCrash","arguments":[{"f":3.45}]}'
+                ];
+
+                frames.forEach((frame, i) => {
+                    setTimeout(() => this.processFrame(frame), i * 500);
+                });
+            }
+
+            generateSampleStats() {
+                this.log('Generating sample statistics...', 'info');
+                this.dbLog('Generating sample data...', 'info');
+                
+                const now = new Date();
+                for (let d = 0; d < 14; d++) {
+                    const date = new Date(now);
+                    date.setDate(now.getDate() - d);
+                    
+                    const hours = Math.floor(Math.random() * 12) + 6;
+                    const selectedHours = new Set();
+                    while (selectedHours.size < hours) {
+                        selectedHours.add(Math.floor(Math.random() * 24));
+                    }
+                    
+                    selectedHours.forEach(hour => {
+                        const crashes = Math.floor(Math.random() * 50) + 10;
+                        const baseWinRate = 0.4 + Math.random() * 0.4;
+                        
+                        const key = `${date.toDateString()}_${hour}`;
+                        this.statistics[key] = {
+                            day: date.getDay(),
+                            hour,
+                            date: date.toDateString(),
+                            crashes: [],
+                            wins: 0,
+                            losses: 0,
+                            maxLossStreak: 0,
+                            currentLossStreak: 0
+                        };
+                        
+                        const stats = this.statistics[key];
+                        let currentLossStreak = 0;
+                        
+                        for (let i = 0; i < crashes; i++) {
+                            const isWin = Math.random() < baseWinRate;
+                            const value = isWin ? 2.0 + Math.random() * 8 : 0.1 + Math.random() * 1.9;
+                            
+                            stats.crashes.push({ value, timestamp: Date.now() - i * 1000, win: isWin });
+                            
+                            if (isWin) {
+                                stats.wins++;
+                                currentLossStreak = 0;
+                            } else {
+                                stats.losses++;
+                                currentLossStreak++;
+                                stats.maxLossStreak = Math.max(stats.maxLossStreak, currentLossStreak);
+                            }
+                        }
+                    });
+                }
+                
+                this.saveStatistics();
+                this.updateStatsTable();
+                this.updateSummaryCards();
+                this.updateDatabaseStats();
+                this.log('Sample data generated successfully', 'success');
+                this.dbLog('Sample data generation completed', 'success');
+                this.showNotification('Sample data generated!', 'success');
+            }
+
+            clearStatistics() {
+                if (confirm('Clear all statistics? This cannot be undone.')) {
+                    this.statistics = {};
+                    this.saveStatistics();
+                    this.updateStatsTable();
+                    this.updateSummaryCards();
+                    this.updateDatabaseStats();
+                    this.log('Statistics cleared', 'warning');
+                    this.dbLog('All statistics cleared by user', 'warning');
+                    this.showNotification('Statistics cleared', 'info');
+                }
+            }
+
+            clearLog() {
+                document.getElementById('log').innerHTML = '';
+                this.log('Log cleared', 'info');
+            }
+        }
+
+        let analytics;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            analytics = new SignalRAnalytics();
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update database stats when switching to database tab
+            if (tabName === 'database') {
+                analytics.updateDatabaseStats();
+            }
+        }
+
+        function toggleConnection() {
+            if (analytics.websocket && analytics.websocket.readyState === WebSocket.OPEN) {
+                analytics.disconnect();
+            } else {
+                analytics.connect();
+            }
+        }
+
+        function testWithSampleData() { analytics.testWithSampleData(); }
+        function updateStatsTable() { analytics.updateStatsTable(); }
+        function clearStatistics() { analytics.clearStatistics(); }
+        function generateSampleStats() { analytics.generateSampleStats(); }
+        function clearLog() { analytics.clearLog(); }
+
+        // Database Management Functions
+        function exportDatabase() { analytics.exportDatabase(); }
+        function importDatabase(event) { analytics.importDatabase(event); }
+        function validateDatabase() { analytics.validateDatabase(); }
+        function compactDatabase() { analytics.compactDatabase(); }
+        function resetDatabase() { analytics.resetDatabase(); }
+    </script>
+</body>
+</html>
