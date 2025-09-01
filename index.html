@@ -1590,30 +1590,76 @@
 
                 try {
                     this.sheetsLog('Testing Google Sheets connection...', 'info');
+                    this.sheetsLog(`URL: ${this.sheetsApiUrl}`, 'info');
+                    
+                    // Add a timeout to the request
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
                     
                     const response = await fetch(this.sheetsApiUrl, {
                         method: 'GET',
-                        headers: { 'Content-Type': 'application/json' }
+                        headers: { 
+                            'Content-Type': 'application/json'
+                        },
+                        signal: controller.signal
                     });
+
+                    clearTimeout(timeoutId);
+
+                    this.sheetsLog(`Response status: ${response.status} ${response.statusText}`, 'info');
 
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
 
                     const result = await response.json();
+                    this.sheetsLog(`Response data: ${JSON.stringify(result)}`, 'info');
                     
                     if (result.success) {
-                        this.sheetsLog(`Connection successful! Found ${result.count} existing records`, 'success');
+                        this.sheetsLog(`✅ Connection successful! Found ${result.count} existing records`, 'success');
                         this.showNotification('Google Sheets connected!', 'success');
                         this.updateSheetsIndicator('connected');
                         document.getElementById('sheetRecords').textContent = result.count || 0;
                     } else {
-                        throw new Error(result.message || 'Unknown error');
+                        throw new Error(result.message || 'Unknown error from Google Sheets');
                     }
                 } catch (error) {
-                    this.sheetsLog(`Connection test failed: ${error.message}`, 'error');
-                    this.showNotification('Connection failed', 'error');
+                    let errorMessage = error.message;
+                    let troubleshooting = '';
+                    
+                    if (error.name === 'AbortError') {
+                        errorMessage = 'Request timed out (10 seconds)';
+                        troubleshooting = 'The Google Apps Script may be taking too long to respond. Check your deployment.';
+                    } else if (errorMessage.includes('CORS')) {
+                        troubleshooting = 'CORS error: Make sure your Apps Script is deployed with "Anyone" access.';
+                    } else if (errorMessage.includes('Failed to fetch')) {
+                        troubleshooting = 'Network error: Check your Apps Script URL and internet connection.';
+                    } else if (errorMessage.includes('404')) {
+                        troubleshooting = 'URL not found: Verify your Apps Script web app URL is correct.';
+                    } else if (errorMessage.includes('403')) {
+                        troubleshooting = 'Permission denied: Check your Apps Script deployment settings.';
+                    }
+                    
+                    this.sheetsLog(`❌ Connection failed: ${errorMessage}`, 'error');
+                    if (troubleshooting) {
+                        this.sheetsLog(`💡 Troubleshooting: ${troubleshooting}`, 'warning');
+                    }
+                    
+                    this.showNotification('Connection failed - check console', 'error');
                     this.updateSheetsIndicator('');
+                    
+                    // Show detailed troubleshooting in console
+                    console.group('🔧 Google Sheets Connection Troubleshooting');
+                    console.log('Error:', error);
+                    console.log('URL being tested:', this.sheetsApiUrl);
+                    console.log('');
+                    console.log('Common fixes:');
+                    console.log('1. Make sure Apps Script is deployed as web app');
+                    console.log('2. Set "Execute as: Me" and "Who has access: Anyone"');
+                    console.log('3. Use the LATEST deployment URL, not the script editor URL');
+                    console.log('4. Try creating a NEW deployment after code changes');
+                    console.log('5. Check that SHEET_ID is correct in Apps Script');
+                    console.groupEnd();
                 }
             }
 
