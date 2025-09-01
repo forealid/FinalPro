@@ -1471,17 +1471,26 @@
                     this.updateSheetsIndicator('syncing');
                     this.sheetsLog(`Syncing ${this.pendingCrashes.length} crash records...`, 'info');
 
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for sync
+
                     const response = await fetch(this.sheetsApiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ crashes: this.pendingCrashes })
+                        body: JSON.stringify({ crashes: this.pendingCrashes }),
+                        signal: controller.signal
                     });
+
+                    clearTimeout(timeoutId);
+
+                    this.sheetsLog(`Sync response: ${response.status} ${response.statusText}`, 'info');
 
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
 
                     const result = await response.json();
+                    this.sheetsLog(`Sync result: ${JSON.stringify(result)}`, 'info');
                     
                     if (!result.success) {
                         throw new Error(result.message || 'Sync failed');
@@ -1494,7 +1503,7 @@
                     this.lastSyncTime = new Date();
 
                     this.updateSheetsIndicator('connected');
-                    this.sheetsLog(`Successfully synced ${syncedCount} records`, 'success');
+                    this.sheetsLog(`✅ Successfully synced ${syncedCount} records`, 'success');
                     this.showNotification(`Synced ${syncedCount} records`, 'success');
                     
                     this.updateSyncStats();
@@ -1502,8 +1511,15 @@
                 } catch (error) {
                     this.syncErrors++;
                     this.updateSheetsIndicator('connected');
-                    this.sheetsLog(`Sync failed: ${error.message}`, 'error');
-                    this.showNotification('Sync failed', 'error');
+                    
+                    let errorMessage = error.message;
+                    if (error.name === 'AbortError') {
+                        errorMessage = 'Sync timed out - Google Sheets may be slow';
+                    }
+                    
+                    this.sheetsLog(`❌ Sync failed: ${errorMessage}`, 'error');
+                    this.sheetsLog('💡 Pending crashes will be retried on next sync attempt', 'info');
+                    this.showNotification('Sync failed - will retry', 'error');
                     this.updateSyncStats();
                 }
             }
