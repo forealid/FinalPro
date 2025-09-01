@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SignalR Analytics Pro - Google Sheets Edition</title>
+    <title>SignalR Analytics Pro</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
@@ -199,11 +199,6 @@
         .status-dot.connecting {
             background: var(--warning);
             color: var(--warning);
-        }
-
-        .status-dot.syncing {
-            background: var(--accent-cyan);
-            color: var(--accent-cyan);
         }
 
         @keyframes pulse {
@@ -849,29 +844,6 @@
             line-height: 1.5;
         }
 
-        /* Google Sheets Integration Styles */
-        .sheets-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 1rem;
-        }
-
-        .sheets-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--danger);
-        }
-
-        .sheets-indicator.connected { background: var(--success); }
-        .sheets-indicator.syncing { 
-            background: var(--accent-cyan);
-            animation: pulse 1s infinite;
-        }
-
         /* Responsive */
         @media (max-width: 1200px) {
             .connection-grid {
@@ -1011,7 +983,7 @@
                 <nav class="nav-tabs">
                     <button class="nav-tab active" onclick="switchTab('connection')">Connection</button>
                     <button class="nav-tab" onclick="switchTab('statistics')">Statistics</button>
-                    <button class="nav-tab" onclick="switchTab('sheets')">Google Sheets</button>
+                    <button class="nav-tab" onclick="switchTab('database')">Database</button>
                 </nav>
                 
                 <div class="connection-status">
@@ -1053,11 +1025,6 @@
                                     Clear Log
                                 </button>
                             </div>
-
-                            <div class="sheets-status">
-                                <div class="sheets-indicator" id="sheetsIndicator"></div>
-                                <span id="sheetsStatus">Google Sheets: Not configured</span>
-                            </div>
                         </div>
                     </div>
 
@@ -1090,14 +1057,6 @@
                                 <div class="stat-card">
                                     <div class="stat-value" id="framesProcessed">0</div>
                                     <div class="stat-label">Frames</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-value" id="pendingSync">0</div>
-                                    <div class="stat-label">Pending Sync</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-value" id="lastSync">--</div>
-                                    <div class="stat-label">Last Sync</div>
                                 </div>
                             </div>
                         </div>
@@ -1189,9 +1148,6 @@
                                 <button class="button btn-secondary" onclick="generateSampleStats()">
                                     Generate Sample
                                 </button>
-                                <button class="button btn-export" onclick="syncToSheets()">
-                                    Sync Now
-                                </button>
                                 <button class="button btn-warning" onclick="clearStatistics()">
                                     Clear Stats
                                 </button>
@@ -1237,76 +1193,68 @@
                 </div>
             </div>
 
-            <!-- Google Sheets Tab -->
-            <div id="sheetsTab" class="tab-content">
+            <!-- Database Tab -->
+            <div id="databaseTab" class="tab-content">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📊 Google Sheets Configuration</h3>
+                        <h3 class="card-title">💾 Database Management</h3>
                     </div>
                     <div class="card-body">
-                        <div class="input-group">
-                            <label class="input-label">Apps Script Web App URL</label>
-                            <input type="text" id="sheetsApiUrl" class="input-field" 
-                                   placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"
-                                   onchange="saveConfiguration()">
-                        </div>
-                        
-                        <div class="button-group">
-                            <button class="button btn-primary" onclick="testSheetsConnection()">
-                                Test Connection
-                            </button>
-                            <button class="button btn-secondary" onclick="loadFromSheets()">
-                                Load Data
-                            </button>
-                            <button class="button btn-export" onclick="syncToSheets()">
-                                Sync to Sheets
-                            </button>
-                            <button class="button btn-warning" onclick="forceSyncAll()">
-                                Force Full Sync
-                            </button>
-                        </div>
-
-                        <div class="summary-grid" style="margin-top: 2rem;">
-                            <div class="summary-card">
-                                <h4 class="summary-title">📈 Sync Statistics</h4>
-                                <div class="summary-stats">
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="totalSynced">0</div>
-                                        <div class="summary-stat-label">Total Synced</div>
-                                    </div>
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="pendingSyncCount">0</div>
-                                        <div class="summary-stat-label">Pending</div>
-                                    </div>
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="lastSyncTime">--</div>
-                                        <div class="summary-stat-label">Last Sync</div>
-                                    </div>
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="syncErrors">0</div>
-                                        <div class="summary-stat-label">Sync Errors</div>
-                                    </div>
-                                </div>
+                        <div class="db-management">
+                            <div class="db-card">
+                                <h4>📤 Export Database</h4>
+                                <p>Download your complete statistics database as a JSON file. This includes all crash history, win rates, and analytics data.</p>
+                                <button class="button btn-export" onclick="exportDatabase()">
+                                    📥 Export Data
+                                </button>
                             </div>
 
-                            <div class="summary-card">
-                                <h4 class="summary-title">⚙️ Sync Settings</h4>
-                                <div class="summary-stats">
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="syncInterval">10</div>
-                                        <div class="summary-stat-label">Interval (min)</div>
+                            <div class="db-card">
+                                <h4>📥 Import Database</h4>
+                                <p>Upload a previously exported database file to restore your analytics data. This will merge with existing data.</p>
+                                <input type="file" id="importFile" class="file-input" accept=".json" onchange="importDatabase(event)">
+                                <label for="importFile" class="file-input-label">
+                                    📤 Choose File
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 3rem;">
+                            <div class="summary-grid">
+                                <div class="summary-card">
+                                    <h4 class="summary-title">📊 Database Statistics</h4>
+                                    <div class="summary-stats">
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbRecords">0</div>
+                                            <div class="summary-stat-label">Total Records</div>
+                                        </div>
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbSize">0 KB</div>
+                                            <div class="summary-stat-label">Database Size</div>
+                                        </div>
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbOldest">--</div>
+                                            <div class="summary-stat-label">Oldest Record</div>
+                                        </div>
+                                        <div class="summary-stat">
+                                            <div class="summary-stat-value" id="dbNewest">--</div>
+                                            <div class="summary-stat-label">Newest Record</div>
+                                        </div>
                                     </div>
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="autoSyncEnabled">✓</div>
-                                        <div class="summary-stat-label">Auto Sync</div>
-                                    </div>
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="nextSyncIn">--</div>
-                                        <div class="summary-stat-label">Next Sync</div>
-                                    </div>
-                                    <div class="summary-stat">
-                                        <div class="summary-stat-value" id="sheetRecords">--</div>
-                                        <div class="summary-stat-label">Sheet Records</div>
+                                </div>
+
+                                <div class="summary-card">
+                                    <h4 class="summary-title">🔧 Database Actions</h4>
+                                    <div class="button-group" style="margin-top: 1rem;">
+                                        <button class="button btn-secondary" onclick="validateDatabase()">
+                                            🔍 Validate Data
+                                        </button>
+                                        <button class="button btn-warning" onclick="compactDatabase()">
+                                            🗜️ Compact DB
+                                        </button>
+                                        <button class="button btn-danger" onclick="resetDatabase()">
+                                            🗑️ Reset All
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1316,10 +1264,10 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📋 Sync Log</h3>
+                        <h3 class="card-title">📋 Database Log</h3>
                     </div>
                     <div class="card-body">
-                        <div class="log-container" id="sheetsLog"></div>
+                        <div class="log-container" id="dbLog"></div>
                     </div>
                 </div>
             </div>
@@ -1329,681 +1277,366 @@
     <script>
         class SignalRAnalytics {
             constructor() {
-                // WebSocket connection
                 this.websocket = null;
                 this.messagesReceived = 0;
                 this.framesProcessed = 0;
                 this.connectionStartTime = null;
                 this.connectionTimeInterval = null;
-                
-                // Session data
                 this.crashHistory = [];
                 this.sessionCrashes = [];
                 this.currentStreak = 0;
                 this.streakType = 'none';
                 
-                // Google Sheets integration
-                this.sheetsApiUrl = '';
-                this.pendingCrashes = []; // Crashes waiting to be synced
-                this.syncInterval = null;
-                this.syncIntervalMinutes = 10;
-                this.autoSyncEnabled = true;
-                this.lastSyncTime = null;
-                this.syncErrors = 0;
-                this.totalSynced = 0;
-                
-                // All crash data (loaded from sheets + new session data)
-                this.allCrashes = [];
-                this.statistics = {}; // Computed from allCrashes
+                this.statistics = this.loadStatistics();
                 
                 this.init();
             }
 
-            async init() {
+            init() {
                 this.log('SignalR Analytics Pro initialized', 'success');
-                this.loadConfiguration();
-                await this.initializeFromSheets();
-                this.updateDisplay();
-                this.startAutoSync();
-                this.sheetsLog('Google Sheets integration ready', 'success');
+                this.updateStatsTable();
+                this.updateSummaryCards();
+                this.updateDatabaseStats();
+                this.dbLog('Database system ready', 'success');
             }
 
-            // Configuration Management
-            loadConfiguration() {
+            // Storage Management with Error Handling
+            loadStatistics() {
                 try {
-                    const config = JSON.parse(localStorage.getItem('sheets_config') || '{}');
-                    this.sheetsApiUrl = config.apiUrl || '';
-                    this.syncIntervalMinutes = config.syncInterval || 10;
-                    this.autoSyncEnabled = config.autoSync !== false;
-                    
-                    document.getElementById('sheetsApiUrl').value = this.sheetsApiUrl;
-                    this.updateSheetsStatus();
+                    const saved = localStorage.getItem('signalr_statistics');
+                    const data = saved ? JSON.parse(saved) : {};
+                    this.dbLog(`Loaded ${Object.keys(data).length} records from local storage`, 'info');
+                    return data;
                 } catch (error) {
-                    this.sheetsLog(`Failed to load configuration: ${error.message}`, 'error');
+                    this.dbLog(`Failed to load statistics: ${error.message}`, 'error');
+                    this.showNotification('Failed to load database', 'error');
+                    return {};
                 }
             }
 
-            saveConfiguration() {
-                const config = {
-                    apiUrl: document.getElementById('sheetsApiUrl').value.trim(),
-                    syncInterval: this.syncIntervalMinutes,
-                    autoSync: this.autoSyncEnabled
-                };
-                
-                this.sheetsApiUrl = config.apiUrl;
-                localStorage.setItem('sheets_config', JSON.stringify(config));
-                this.updateSheetsStatus();
-                this.sheetsLog('Configuration saved', 'success');
-            }
-
-            updateSheetsStatus() {
-                const indicator = document.getElementById('sheetsIndicator');
-                const status = document.getElementById('sheetsStatus');
-                
-                if (!this.sheetsApiUrl) {
-                    indicator.className = 'sheets-indicator';
-                    status.textContent = 'Google Sheets: Not configured';
-                } else {
-                    indicator.className = 'sheets-indicator connected';
-                    status.textContent = 'Google Sheets: Ready';
-                }
-            }
-
-            // Google Sheets API Integration
-            async initializeFromSheets() {
-                if (!this.sheetsApiUrl) {
-                    this.sheetsLog('No Google Sheets URL configured', 'warning');
-                    return;
-                }
-
+            saveStatistics() {
                 try {
-                    this.sheetsLog('Loading crash data from Google Sheets...', 'info');
-                    await this.loadFromSheets();
+                    const dataStr = JSON.stringify(this.statistics);
+                    localStorage.setItem('signalr_statistics', dataStr);
+                    this.updateDatabaseStats();
+                    this.dbLog(`Saved ${Object.keys(this.statistics).length} records to local storage`, 'success');
                 } catch (error) {
-                    this.sheetsLog(`Failed to load from Sheets: ${error.message}`, 'error');
+                    this.dbLog(`Failed to save statistics: ${error.message}`, 'error');
+                    this.showNotification('Failed to save data', 'error');
                 }
             }
 
-            async loadFromSheets() {
-                if (!this.sheetsApiUrl) {
-                    throw new Error('Google Sheets API URL not configured');
-                }
-
-                const response = await fetch(this.sheetsApiUrl, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                
-                if (!result.success) {
-                    throw new Error(result.message || 'Unknown error from Google Sheets');
-                }
-
-                // Load crash data and rebuild statistics
-                this.allCrashes = result.data || [];
-                this.rebuildStatisticsFromCrashes();
-                
-                this.sheetsLog(`Loaded ${this.allCrashes.length} crash records from Google Sheets`, 'success');
-                this.showNotification(`Loaded ${this.allCrashes.length} records`, 'success');
-                
-                // Update UI displays
-                this.updateDisplay();
-                document.getElementById('sheetRecords').textContent = this.allCrashes.length;
-            }
-
-            async syncToSheets() {
-                if (!this.sheetsApiUrl) {
-                    this.sheetsLog('Cannot sync: Google Sheets URL not configured', 'warning');
-                    return;
-                }
-
-                if (this.pendingCrashes.length === 0) {
-                    this.sheetsLog('No pending crashes to sync', 'info');
-                    return;
-                }
-
+            // Database Export Function
+            exportDatabase() {
                 try {
-                    this.updateSheetsIndicator('syncing');
-                    this.sheetsLog(`Syncing ${this.pendingCrashes.length} crash records...`, 'info');
+                    const exportData = {
+                        version: '2.0',
+                        exportDate: new Date().toISOString(),
+                        statistics: this.statistics,
+                        metadata: {
+                            totalRecords: Object.keys(this.statistics).length,
+                            exportedBy: 'SignalR Analytics Pro'
+                        }
+                    };
 
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for sync
-
-                    const response = await fetch(this.sheetsApiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ crashes: this.pendingCrashes }),
-                        signal: controller.signal
-                    });
-
-                    clearTimeout(timeoutId);
-
-                    this.sheetsLog(`Sync response: ${response.status} ${response.statusText}`, 'info');
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    this.sheetsLog(`Sync result: ${JSON.stringify(result)}`, 'info');
+                    const dataStr = JSON.stringify(exportData, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
                     
-                    if (!result.success) {
-                        throw new Error(result.message || 'Sync failed');
-                    }
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `signalr-analytics-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
 
-                    // Success - clear pending crashes and update stats
-                    const syncedCount = this.pendingCrashes.length;
-                    this.pendingCrashes = [];
-                    this.totalSynced += syncedCount;
-                    this.lastSyncTime = new Date();
-
-                    this.updateSheetsIndicator('connected');
-                    this.sheetsLog(`✅ Successfully synced ${syncedCount} records`, 'success');
-                    this.showNotification(`Synced ${syncedCount} records`, 'success');
-                    
-                    this.updateSyncStats();
-
+                    this.dbLog(`Database exported successfully (${Object.keys(this.statistics).length} records)`, 'success');
+                    this.showNotification('Database exported successfully!', 'success');
                 } catch (error) {
-                    this.syncErrors++;
-                    this.updateSheetsIndicator('connected');
-                    
-                    let errorMessage = error.message;
-                    if (error.name === 'AbortError') {
-                        errorMessage = 'Sync timed out - Google Sheets may be slow';
-                    }
-                    
-                    this.sheetsLog(`❌ Sync failed: ${errorMessage}`, 'error');
-                    this.sheetsLog('💡 Pending crashes will be retried on next sync attempt', 'info');
-                    this.showNotification('Sync failed - will retry', 'error');
-                    this.updateSyncStats();
+                    this.dbLog(`Export failed: ${error.message}`, 'error');
+                    this.showNotification('Export failed', 'error');
                 }
             }
 
-            async forceSyncAll() {
-                if (!this.sheetsApiUrl) {
-                    this.sheetsLog('Cannot sync: Google Sheets URL not configured', 'warning');
-                    return;
-                }
+            // Database Import Function
+            importDatabase(event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-                if (confirm('This will sync ALL crash data to Google Sheets. Continue?')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
                     try {
-                        // Add all crashes to pending (this forces a complete sync)
-                        this.pendingCrashes = [...this.allCrashes];
-                        await this.syncToSheets();
-                        this.sheetsLog('Force sync completed', 'success');
-                    } catch (error) {
-                        this.sheetsLog(`Force sync failed: ${error.message}`, 'error');
-                    }
-                }
-            }
-
-            updateSheetsIndicator(status) {
-                const indicator = document.getElementById('sheetsIndicator');
-                indicator.className = `sheets-indicator ${status}`;
-            }
-
-            updateSyncStats() {
-                document.getElementById('totalSynced').textContent = this.totalSynced;
-                document.getElementById('pendingSyncCount').textContent = this.pendingCrashes.length;
-                document.getElementById('syncErrors').textContent = this.syncErrors;
-                document.getElementById('pendingSync').textContent = this.pendingCrashes.length;
-                
-                if (this.lastSyncTime) {
-                    document.getElementById('lastSyncTime').textContent = this.lastSyncTime.toLocaleTimeString();
-                    document.getElementById('lastSync').textContent = this.lastSyncTime.toLocaleTimeString();
-                }
-            }
-
-            // Auto-sync functionality
-            startAutoSync() {
-                if (this.syncInterval) {
-                    clearInterval(this.syncInterval);
-                }
-
-                if (this.autoSyncEnabled && this.sheetsApiUrl) {
-                    this.syncInterval = setInterval(() => {
-                        if (this.pendingCrashes.length > 0) {
-                            this.syncToSheets();
-                        }
-                    }, this.syncIntervalMinutes * 60 * 1000); // Convert minutes to milliseconds
-
-                    this.sheetsLog(`Auto-sync enabled: every ${this.syncIntervalMinutes} minutes`, 'info');
-                    
-                    // Update next sync countdown
-                    this.startSyncCountdown();
-                }
-            }
-
-            startSyncCountdown() {
-                setInterval(() => {
-                    if (this.autoSyncEnabled && this.lastSyncTime) {
-                        const nextSync = new Date(this.lastSyncTime.getTime() + (this.syncIntervalMinutes * 60 * 1000));
-                        const now = new Date();
-                        const remaining = Math.max(0, nextSync - now);
+                        const importData = JSON.parse(e.target.result);
                         
-                        if (remaining > 0) {
-                            const minutes = Math.floor(remaining / 60000);
-                            const seconds = Math.floor((remaining % 60000) / 1000);
-                            document.getElementById('nextSyncIn').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                        } else {
-                            document.getElementById('nextSyncIn').textContent = 'Now';
+                        // Validate import data structure
+                        if (!importData.statistics) {
+                            throw new Error('Invalid file format - no statistics data found');
                         }
+
+                        // Backup current data
+                        const backup = { ...this.statistics };
+                        
+                        // Merge imported data
+                        let importedRecords = 0;
+                        let updatedRecords = 0;
+                        
+                        Object.entries(importData.statistics).forEach(([key, value]) => {
+                            if (this.statistics[key]) {
+                                // Merge existing record
+                                this.statistics[key] = {
+                                    ...this.statistics[key],
+                                    ...value,
+                                    crashes: [...(this.statistics[key].crashes || []), ...(value.crashes || [])]
+                                };
+                                updatedRecords++;
+                            } else {
+                                // Add new record
+                                this.statistics[key] = value;
+                                importedRecords++;
+                            }
+                        });
+
+                        this.saveStatistics();
+                        this.updateStatsTable();
+                        this.updateSummaryCards();
+                        this.updateDatabaseStats();
+
+                        this.dbLog(`Import completed: ${importedRecords} new records, ${updatedRecords} updated`, 'success');
+                        this.showNotification(`Imported ${importedRecords + updatedRecords} records!`, 'success');
+                        
+                        // Reset file input
+                        event.target.value = '';
+                        
+                    } catch (error) {
+                        this.dbLog(`Import failed: ${error.message}`, 'error');
+                        this.showNotification(`Import failed: ${error.message}`, 'error');
+                        event.target.value = '';
                     }
-                }, 1000);
-            }
-
-            // Test Google Sheets connection
-            async testSheetsConnection() {
-                if (!this.sheetsApiUrl) {
-                    this.sheetsLog('Please enter Google Sheets API URL first', 'warning');
-                    return;
-                }
-
-                try {
-                    this.sheetsLog('Testing Google Sheets connection...', 'info');
-                    this.sheetsLog(`URL: ${this.sheetsApiUrl}`, 'info');
-                    
-                    // Add a timeout to the request
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-                    
-                    const response = await fetch(this.sheetsApiUrl, {
-                        method: 'GET',
-                        headers: { 
-                            'Content-Type': 'application/json'
-                        },
-                        signal: controller.signal
-                    });
-
-                    clearTimeout(timeoutId);
-
-                    this.sheetsLog(`Response status: ${response.status} ${response.statusText}`, 'info');
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    this.sheetsLog(`Response data: ${JSON.stringify(result)}`, 'info');
-                    
-                    if (result.success) {
-                        this.sheetsLog(`✅ Connection successful! Found ${result.count} existing records`, 'success');
-                        this.showNotification('Google Sheets connected!', 'success');
-                        this.updateSheetsIndicator('connected');
-                        document.getElementById('sheetRecords').textContent = result.count || 0;
-                    } else {
-                        throw new Error(result.message || 'Unknown error from Google Sheets');
-                    }
-                } catch (error) {
-                    let errorMessage = error.message;
-                    let troubleshooting = '';
-                    
-                    if (error.name === 'AbortError') {
-                        errorMessage = 'Request timed out (10 seconds)';
-                        troubleshooting = 'The Google Apps Script may be taking too long to respond. Check your deployment.';
-                    } else if (errorMessage.includes('CORS')) {
-                        troubleshooting = 'CORS error: Make sure your Apps Script is deployed with "Anyone" access.';
-                    } else if (errorMessage.includes('Failed to fetch')) {
-                        troubleshooting = 'Network error: Check your Apps Script URL and internet connection.';
-                    } else if (errorMessage.includes('404')) {
-                        troubleshooting = 'URL not found: Verify your Apps Script web app URL is correct.';
-                    } else if (errorMessage.includes('403')) {
-                        troubleshooting = 'Permission denied: Check your Apps Script deployment settings.';
-                    }
-                    
-                    this.sheetsLog(`❌ Connection failed: ${errorMessage}`, 'error');
-                    if (troubleshooting) {
-                        this.sheetsLog(`💡 Troubleshooting: ${troubleshooting}`, 'warning');
-                    }
-                    
-                    this.showNotification('Connection failed - check console', 'error');
-                    this.updateSheetsIndicator('');
-                    
-                    // Show detailed troubleshooting in console
-                    console.group('🔧 Google Sheets Connection Troubleshooting');
-                    console.log('Error:', error);
-                    console.log('URL being tested:', this.sheetsApiUrl);
-                    console.log('');
-                    console.log('Common fixes:');
-                    console.log('1. Make sure Apps Script is deployed as web app');
-                    console.log('2. Set "Execute as: Me" and "Who has access: Anyone"');
-                    console.log('3. Use the LATEST deployment URL, not the script editor URL');
-                    console.log('4. Try creating a NEW deployment after code changes');
-                    console.log('5. Check that SHEET_ID is correct in Apps Script');
-                    console.groupEnd();
-                }
-            }
-
-            // Rebuild statistics from flat crash data
-            rebuildStatisticsFromCrashes() {
-                this.statistics = {};
-                
-                this.allCrashes.forEach(crash => {
-                    const crashDate = new Date(crash.timestamp);
-                    const day = crashDate.getDay();
-                    const hour = crashDate.getHours();
-                    const dateStr = crashDate.toDateString();
-                    const key = `${dateStr}_${hour}`;
-                    
-                    if (!this.statistics[key]) {
-                        this.statistics[key] = {
-                            day, hour, date: dateStr,
-                            crashes: [],
-                            wins: 0,
-                            losses: 0,
-                            maxLossStreak: 0,
-                            currentLossStreak: 0
-                        };
-                    }
-
-                    this.statistics[key].crashes.push({
-                        value: crash.value,
-                        timestamp: crash.timestamp,
-                        win: crash.win
-                    });
-
-                    if (crash.win) {
-                        this.statistics[key].wins++;
-                    } else {
-                        this.statistics[key].losses++;
-                    }
-                });
-
-                // Calculate loss streaks for each hour
-                Object.values(this.statistics).forEach(stats => {
-                    let currentStreak = 0;
-                    let maxStreak = 0;
-                    
-                    stats.crashes.forEach(crash => {
-                        if (crash.win) {
-                            currentStreak = 0;
-                        } else {
-                            currentStreak++;
-                            maxStreak = Math.max(maxStreak, currentStreak);
-                        }
-                    });
-                    
-                    stats.maxLossStreak = maxStreak;
-                });
-            }
-
-            // Record new crash (from WebSocket)
-            recordCrash(value, timestamp = Date.now()) {
-                const isWin = value >= 2.0;
-                const crash = { value, timestamp, win: isWin };
-                
-                // Add to session data
-                this.sessionCrashes.push(crash);
-                this.allCrashes.push(crash);
-                
-                // Add to pending sync queue
-                this.pendingCrashes.push(crash);
-                
-                // Rebuild statistics
-                this.rebuildStatisticsFromCrashes();
-                
-                // Update UI
-                this.updateDisplay();
-                this.updateSessionStats();
-                this.updateSyncStats();
-                
-                this.log(`Recorded crash: ${value.toFixed(2)} ${isWin ? '(WIN)' : '(LOSS)'}`, 'crash');
-            }
-
-            // WebSocket Connection Management
-            connect() {
-                const url = document.getElementById('wsUrl').value.trim();
-                const accountId = document.getElementById('accountId').value.trim();
-                
-                if (!url) {
-                    this.log('Please enter a WebSocket URL', 'error');
-                    return;
-                }
-
-                this.log(`Connecting to ${url}...`, 'info');
-                this.updateConnectionStatus('connecting');
-
-                try {
-                    this.websocket = new WebSocket(url);
-
-                    this.websocket.onopen = () => {
-                        this.connectionStartTime = new Date();
-                        this.updateConnectionStatus('connected');
-                        this.log('WebSocket connected successfully', 'success');
-                        this.startConnectionTimer();
-                        this.sendHandshake();
-                        if (accountId) {
-                            setTimeout(() => this.sendAccountSubscription(accountId), 100);
-                        }
-                    };
-
-                    this.websocket.onmessage = (event) => this.handleMessage(event.data);
-                    this.websocket.onclose = (event) => {
-                        this.updateConnectionStatus('disconnected');
-                        this.log(`Connection closed (Code: ${event.code})`, 'warning');
-                        this.stopConnectionTimer();
-                    };
-                    this.websocket.onerror = () => {
-                        this.log('WebSocket error occurred', 'error');
-                        this.updateConnectionStatus('disconnected');
-                    };
-                } catch (error) {
-                    this.log(`Failed to connect: ${error.message}`, 'error');
-                    this.updateConnectionStatus('disconnected');
-                }
-            }
-
-            disconnect() {
-                if (this.websocket) {
-                    this.websocket.close();
-                    this.websocket = null;
-                    this.log('Disconnected by user', 'info');
-                    this.stopConnectionTimer();
-                }
-            }
-
-            sendHandshake() {
-                const handshake = { protocol: "json", version: 1 };
-                const message = JSON.stringify(handshake) + "\u001e";
-                this.websocket.send(message);
-                this.log('Sent handshake: ' + JSON.stringify(handshake), 'info');
-            }
-
-            sendAccountSubscription(accountId) {
-                const subscription = {
-                    arguments: [{ activity: 30, account: parseInt(accountId) }],
-                    invocationId: "1",
-                    target: "Account",
-                    type: 1
                 };
-                const message = JSON.stringify(subscription) + "\u001e";
-                this.websocket.send(message);
-                this.log('Sent account subscription: ' + JSON.stringify(subscription), 'info');
+                
+                reader.readAsText(file);
+                this.dbLog(`Starting import of file: ${file.name}`, 'info');
             }
 
-            handleMessage(data) {
-                this.messagesReceived++;
-                document.getElementById('messagesReceived').textContent = this.messagesReceived;
+            // Database Validation
+            validateDatabase() {
+                this.dbLog('Starting database validation...', 'info');
+                
+                let validRecords = 0;
+                let invalidRecords = 0;
+                let fixedRecords = 0;
+                const errors = [];
 
-                const frames = data.split("\u001e").filter(f => f.trim().length > 0);
-                this.log(`Received ${frames.length} frame(s)`, 'info');
+                Object.entries(this.statistics).forEach(([key, record]) => {
+                    try {
+                        // Check required fields
+                        if (!record.day === undefined || !record.hour === undefined || !record.date) {
+                            errors.push(`Record ${key}: Missing required fields`);
+                            invalidRecords++;
+                            return;
+                        }
 
-                frames.forEach(frame => this.processFrame(frame));
-            }
+                        // Validate data types
+                        if (typeof record.day !== 'number' || typeof record.hour !== 'number') {
+                            errors.push(`Record ${key}: Invalid data types`);
+                            invalidRecords++;
+                            return;
+                        }
 
-            processFrame(frame) {
-                this.framesProcessed++;
-                document.getElementById('framesProcessed').textContent = this.framesProcessed;
+                        // Validate ranges
+                        if (record.day < 0 || record.day > 6 || record.hour < 0 || record.hour > 23) {
+                            errors.push(`Record ${key}: Values out of range`);
+                            invalidRecords++;
+                            return;
+                        }
 
-                try {
-                    if (!frame.trim()) {
-                        this.log('Empty frame (keepalive)', 'info');
-                        return;
+                        // Fix missing arrays
+                        if (!Array.isArray(record.crashes)) {
+                            record.crashes = [];
+                            fixedRecords++;
+                        }
+
+                        // Recalculate stats if needed
+                        if (record.crashes.length > 0 && (!record.wins || !record.losses)) {
+                            record.wins = record.crashes.filter(c => c.win || c.value >= 2.0).length;
+                            record.losses = record.crashes.length - record.wins;
+                            fixedRecords++;
+                        }
+
+                        validRecords++;
+                    } catch (error) {
+                        errors.push(`Record ${key}: ${error.message}`);
+                        invalidRecords++;
                     }
+                });
 
-                    const message = JSON.parse(frame);
-                    this.log(`Frame: ${JSON.stringify(message)}`, 'info');
-                    this.handleSignalRMessage(message);
-                } catch (error) {
-                    this.log(`Non-JSON frame: "${frame}"`, 'warning');
+                if (fixedRecords > 0) {
+                    this.saveStatistics();
+                }
+
+                const message = `Validation complete: ${validRecords} valid, ${invalidRecords} invalid, ${fixedRecords} fixed`;
+                this.dbLog(message, invalidRecords > 0 ? 'warning' : 'success');
+                
+                if (errors.length > 0) {
+                    errors.slice(0, 5).forEach(error => this.dbLog(error, 'error'));
+                    if (errors.length > 5) {
+                        this.dbLog(`... and ${errors.length - 5} more errors`, 'warning');
+                    }
+                }
+
+                this.showNotification(message, invalidRecords > 0 ? 'error' : 'success');
+            }
+
+            // Database Compaction
+            compactDatabase() {
+                const originalSize = Object.keys(this.statistics).length;
+                let removedRecords = 0;
+
+                // Remove records with no crash data
+                Object.entries(this.statistics).forEach(([key, record]) => {
+                    if (!record.crashes || record.crashes.length === 0) {
+                        delete this.statistics[key];
+                        removedRecords++;
+                    }
+                });
+
+                this.saveStatistics();
+                this.updateStatsTable();
+                this.updateSummaryCards();
+                this.updateDatabaseStats();
+
+                const message = `Database compacted: removed ${removedRecords} empty records (${originalSize} → ${Object.keys(this.statistics).length})`;
+                this.dbLog(message, 'success');
+                this.showNotification(`Removed ${removedRecords} empty records`, 'success');
+            }
+
+            // Database Reset
+            resetDatabase() {
+                if (confirm('⚠️ This will permanently delete ALL analytics data. This action cannot be undone!\n\nAre you absolutely sure?')) {
+                    if (confirm('🚨 FINAL WARNING: All statistics will be lost forever. Continue?')) {
+                        this.statistics = {};
+                        this.saveStatistics();
+                        this.updateStatsTable();
+                        this.updateSummaryCards();
+                        this.updateDatabaseStats();
+                        
+                        this.dbLog('Database reset completed - all data cleared', 'warning');
+                        this.showNotification('Database has been reset', 'info');
+                    }
                 }
             }
 
-            handleSignalRMessage(message) {
-                switch (message.type) {
-                    case 1: this.handleInvocation(message); break;
-                    case 6: this.log('Ping received', 'info'); break;
-                    default:
-                        if (message.target) this.handleInvocation(message);
-                        else this.log(`Unknown message type: ${message.type}`, 'warning');
-                }
-            }
-
-            handleInvocation(message) {
-                const target = message.target;
-                const args = message.arguments || [];
-
-                this.log(`Invocation: ${target}`, 'success');
-
-                switch (target) {
-                    case 'OnCrash': this.handleOnCrash(args); break;
-                    case 'OnRegistration': this.handleOnRegistration(args); break;
-                    default: this.log(`Unknown target: ${target}`, 'info');
-                }
-            }
-
-            handleOnCrash(args) {
-                if (args.length > 0 && args[0].f !== undefined) {
-                    const crashValue = args[0].f;
-                    const timestamp = Date.now();
+            // Update Database Statistics Display
+            updateDatabaseStats() {
+                try {
+                    const records = Object.keys(this.statistics).length;
+                    const dataStr = JSON.stringify(this.statistics);
+                    const sizeKB = Math.round((dataStr.length * 2) / 1024); // Approximate size in KB
                     
-                    document.getElementById('lastCrashValue').textContent = crashValue.toFixed(2);
-                    this.addToCrashHistory(crashValue);
-                    this.recordCrash(crashValue, timestamp); // This now handles Google Sheets integration
-                }
-            }
-
-            handleOnRegistration(args) {
-                if (args.length > 0 && args[0].fs) {
-                    const historyValues = args[0].fs;
-                    this.log(`Registration history: ${historyValues.length} values`, 'success');
+                    let oldestDate = null;
+                    let newestDate = null;
                     
-                    historyValues.forEach((entry, index) => {
-                        if (entry.f !== undefined) {
-                            const timestamp = Date.now() - (historyValues.length - index) * 1000; // Offset timestamps
-                            this.addToCrashHistory(entry.f);
-                            this.recordCrash(entry.f, timestamp);
+                    Object.values(this.statistics).forEach(record => {
+                        if (record.date) {
+                            const date = new Date(record.date);
+                            if (!oldestDate || date < oldestDate) oldestDate = date;
+                            if (!newestDate || date > newestDate) newestDate = date;
                         }
                     });
+
+                    document.getElementById('dbRecords').textContent = records.toLocaleString();
+                    document.getElementById('dbSize').textContent = `${sizeKB} KB`;
+                    document.getElementById('dbOldest').textContent = oldestDate ? 
+                        oldestDate.toLocaleDateString() : '--';
+                    document.getElementById('dbNewest').textContent = newestDate ? 
+                        newestDate.toLocaleDateString() : '--';
+                } catch (error) {
+                    this.dbLog(`Failed to update database stats: ${error.message}`, 'error');
                 }
             }
 
-            updateSessionStats() {
-                if (this.sessionCrashes.length > 0) {
-                    const wins = this.sessionCrashes.filter(c => c.win).length;
-                    const winRate = Math.round((wins / this.sessionCrashes.length) * 100);
-                    document.getElementById('sessionWinRate').textContent = `${winRate}%`;
+            // Notification System
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // Show notification
+                setTimeout(() => notification.classList.add('show'), 100);
+                
+                // Hide and remove notification
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(notification), 300);
+                }, 3000);
+            }
 
-                    // Calculate current streak from session data
-                    let streak = 0;
-                    let streakType = 'none';
-                    
-                    for (let i = this.sessionCrashes.length - 1; i >= 0; i--) {
-                        const crash = this.sessionCrashes[i];
-                        if (streak === 0) {
-                            streakType = crash.win ? 'win' : 'loss';
-                            streak = 1;
-                        } else if ((streakType === 'win' && crash.win) || (streakType === 'loss' && !crash.win)) {
-                            streak++;
-                        } else {
-                            break;
-                        }
-                    }
+            // Database Log (separate from main log)
+            dbLog(message, type = 'info') {
+                const container = document.getElementById('dbLog');
+                if (!container) return;
 
-                    const streakDisplay = streak > 0 ? `${streakType === 'win' ? 'W' : 'L'}${streak}` : '--';
-                    document.getElementById('currentStreak').textContent = streakDisplay;
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString();
+                entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+                
+                container.appendChild(entry);
+                container.scrollTop = container.scrollHeight;
+                
+                // Keep only last 50 entries
+                while (container.children.length > 50) {
+                    container.removeChild(container.firstChild);
+                }
+            }
+
+            getTimeKey() {
+                const now = new Date();
+                return {
+                    day: now.getDay(),
+                    hour: now.getHours(),
+                    date: now.toDateString()
+                };
+            }
+
+            recordCrash(value) {
+                const { day, hour, date } = this.getTimeKey();
+                const key = `${date}_${hour}`;
+                
+                if (!this.statistics[key]) {
+                    this.statistics[key] = {
+                        day, hour, date,
+                        crashes: [],
+                        wins: 0,
+                        losses: 0,
+                        maxLossStreak: 0,
+                        currentLossStreak: 0
+                    };
+                }
+
+                const stats = this.statistics[key];
+                const isWin = value >= 2.0;
+                
+                stats.crashes.push({ value, timestamp: Date.now(), win: isWin });
+                
+                if (isWin) {
+                    stats.wins++;
+                    stats.currentLossStreak = 0;
                 } else {
-                    document.getElementById('sessionWinRate').textContent = '--';
-                    document.getElementById('currentStreak').textContent = '--';
+                    stats.losses++;
+                    stats.currentLossStreak++;
+                    stats.maxLossStreak = Math.max(stats.maxLossStreak, stats.currentLossStreak);
                 }
+
+                this.saveStatistics();
+                this.updateStatsTable();
+                this.updateSummaryCards();
             }
 
-            addToCrashHistory(value) {
-                this.crashHistory.unshift(value);
-                if (this.crashHistory.length > 20) {
-                    this.crashHistory = this.crashHistory.slice(0, 20);
-                }
-                this.updateCrashHistoryDisplay();
-            }
-
-            updateCrashHistoryDisplay() {
-                const container = document.getElementById('crashHistory');
-                
-                if (this.crashHistory.length === 0) {
-                    container.innerHTML = '<span style="color: var(--text-muted);">No crash data yet</span>';
-                    return;
-                }
-                
-                container.innerHTML = this.crashHistory
-                    .map(value => {
-                        const isWin = value >= 2.0;
-                        return `<span class="crash-value ${isWin ? 'win' : 'loss'}">${value.toFixed(2)}${isWin ? '✓' : '✗'}</span>`;
-                    })
-                    .join('');
-            }
-
-            updateConnectionStatus(status) {
-                const dot = document.getElementById('statusDot');
-                const text = document.getElementById('statusText');
-                const btn = document.getElementById('connectBtn');
-
-                dot.className = `status-dot ${status}`;
-                
-                switch (status) {
-                    case 'connected':
-                        text.textContent = 'Connected';
-                        btn.textContent = 'Disconnect';
-                        btn.className = 'button btn-danger';
-                        break;
-                    case 'connecting':
-                        text.textContent = 'Connecting...';
-                        btn.textContent = 'Connecting...';
-                        btn.disabled = true;
-                        break;
-                    default:
-                        text.textContent = 'Disconnected';
-                        btn.textContent = 'Connect';
-                        btn.className = 'button btn-primary';
-                        btn.disabled = false;
-                }
-            }
-
-            startConnectionTimer() {
-                this.connectionTimeInterval = setInterval(() => {
-                    if (this.connectionStartTime) {
-                        const elapsed = new Date() - this.connectionStartTime;
-                        const minutes = Math.floor(elapsed / 60000);
-                        const seconds = Math.floor((elapsed % 60000) / 1000);
-                        document.getElementById('connectionTime').textContent = 
-                            `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                    }
-                }, 1000);
-            }
-
-            stopConnectionTimer() {
-                if (this.connectionTimeInterval) {
-                    clearInterval(this.connectionTimeInterval);
-                    this.connectionTimeInterval = null;
-                    document.getElementById('connectionTime').textContent = '--';
-                }
-            }
-
-            // Statistics and Display Management
             getMartingaleSafety(winRate, maxLossStreak) {
                 if (winRate >= 65 && maxLossStreak <= 4) return 'safe';
                 if (winRate >= 50 && maxLossStreak <= 7) return 'risky';
@@ -2177,14 +1810,276 @@
                 };
             }
 
-            updateDisplay() {
-                this.updateStatsTable();
-                this.updateSummaryCards();
-                this.updateCrashHistoryDisplay();
-                this.updateSyncStats();
+            connect() {
+                const url = document.getElementById('wsUrl').value.trim();
+                const accountId = document.getElementById('accountId').value.trim();
+                
+                if (!url) {
+                    this.log('Please enter a WebSocket URL', 'error');
+                    return;
+                }
+
+                this.log(`Connecting to ${url}...`, 'info');
+                this.updateConnectionStatus('connecting');
+
+                try {
+                    this.websocket = new WebSocket(url);
+
+                    this.websocket.onopen = () => {
+                        this.connectionStartTime = new Date();
+                        this.updateConnectionStatus('connected');
+                        this.log('WebSocket connected successfully', 'success');
+                        this.startConnectionTimer();
+                        this.sendHandshake();
+                        if (accountId) {
+                            setTimeout(() => this.sendAccountSubscription(accountId), 100);
+                        }
+                    };
+
+                    this.websocket.onmessage = (event) => this.handleMessage(event.data);
+                    this.websocket.onclose = (event) => {
+                        this.updateConnectionStatus('disconnected');
+                        this.log(`Connection closed (Code: ${event.code})`, 'warning');
+                        this.stopConnectionTimer();
+                    };
+                    this.websocket.onerror = () => {
+                        this.log('WebSocket error occurred', 'error');
+                        this.updateConnectionStatus('disconnected');
+                    };
+                } catch (error) {
+                    this.log(`Failed to connect: ${error.message}`, 'error');
+                    this.updateConnectionStatus('disconnected');
+                }
             }
 
-            // Testing and Sample Data
+            disconnect() {
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                    this.log('Disconnected by user', 'info');
+                    this.stopConnectionTimer();
+                }
+            }
+
+            sendHandshake() {
+                const handshake = { protocol: "json", version: 1 };
+                const message = JSON.stringify(handshake) + "\u001e";
+                this.websocket.send(message);
+                this.log('Sent handshake: ' + JSON.stringify(handshake), 'info');
+            }
+
+            sendAccountSubscription(accountId) {
+                const subscription = {
+                    arguments: [{ activity: 30, account: parseInt(accountId) }],
+                    invocationId: "1",
+                    target: "Account",
+                    type: 1
+                };
+                const message = JSON.stringify(subscription) + "\u001e";
+                this.websocket.send(message);
+                this.log('Sent account subscription: ' + JSON.stringify(subscription), 'info');
+            }
+
+            handleMessage(data) {
+                this.messagesReceived++;
+                document.getElementById('messagesReceived').textContent = this.messagesReceived;
+
+                const frames = data.split("\u001e").filter(f => f.trim().length > 0);
+                this.log(`Received ${frames.length} frame(s)`, 'info');
+
+                frames.forEach(frame => this.processFrame(frame));
+            }
+
+            processFrame(frame) {
+                this.framesProcessed++;
+                document.getElementById('framesProcessed').textContent = this.framesProcessed;
+
+                try {
+                    if (!frame.trim()) {
+                        this.log('Empty frame (keepalive)', 'info');
+                        return;
+                    }
+
+                    const message = JSON.parse(frame);
+                    this.log(`Frame: ${JSON.stringify(message)}`, 'info');
+                    this.handleSignalRMessage(message);
+                } catch (error) {
+                    this.log(`Non-JSON frame: "${frame}"`, 'warning');
+                }
+            }
+
+            handleSignalRMessage(message) {
+                switch (message.type) {
+                    case 1: this.handleInvocation(message); break;
+                    case 6: this.log('Ping received', 'info'); break;
+                    default:
+                        if (message.target) this.handleInvocation(message);
+                        else this.log(`Unknown message type: ${message.type}`, 'warning');
+                }
+            }
+
+            handleInvocation(message) {
+                const target = message.target;
+                const args = message.arguments || [];
+
+                this.log(`Invocation: ${target}`, 'success');
+
+                switch (target) {
+                    case 'OnCrash': this.handleOnCrash(args); break;
+                    case 'OnRegistration': this.handleOnRegistration(args); break;
+                    default: this.log(`Unknown target: ${target}`, 'info');
+                }
+            }
+
+            handleOnCrash(args) {
+                if (args.length > 0 && args[0].f !== undefined) {
+                    const crashValue = args[0].f;
+                    const isWin = crashValue >= 2.0;
+                    
+                    this.log(`CRASH: ${crashValue} ${isWin ? '(WIN)' : '(LOSS)'}`, 'crash');
+                    
+                    document.getElementById('lastCrashValue').textContent = crashValue.toFixed(2);
+                    this.addToCrashHistory(crashValue);
+                    this.recordCrash(crashValue);
+                    this.updateSessionStats(crashValue);
+                }
+            }
+
+            handleOnRegistration(args) {
+                if (args.length > 0 && args[0].fs) {
+                    const historyValues = args[0].fs;
+                    this.log(`Registration history: ${historyValues.length} values`, 'success');
+                    
+                    historyValues.forEach((entry, index) => {
+                        if (entry.f !== undefined) {
+                            const isWin = entry.f >= 2.0;
+                            this.log(`History[${index}]: ${entry.f} ${isWin ? '(WIN)' : '(LOSS)'}`, 'info');
+                            this.addToCrashHistory(entry.f);
+                            this.recordCrash(entry.f);
+                        }
+                    });
+                    this.updateSessionStats();
+                }
+            }
+
+            updateSessionStats(newValue = null) {
+                if (newValue !== null) {
+                    const isWin = newValue >= 2.0;
+                    this.sessionCrashes.push({ value: newValue, win: isWin });
+                    
+                    if (isWin) {
+                        if (this.streakType === 'win') this.currentStreak++;
+                        else { this.currentStreak = 1; this.streakType = 'win'; }
+                    } else {
+                        if (this.streakType === 'loss') this.currentStreak++;
+                        else { this.currentStreak = 1; this.streakType = 'loss'; }
+                    }
+                }
+
+                if (this.sessionCrashes.length > 0) {
+                    const wins = this.sessionCrashes.filter(c => c.win).length;
+                    const winRate = Math.round((wins / this.sessionCrashes.length) * 100);
+                    document.getElementById('sessionWinRate').textContent = `${winRate}%`;
+                } else {
+                    document.getElementById('sessionWinRate').textContent = '--';
+                }
+
+                if (this.currentStreak > 0) {
+                    const streakDisplay = `${this.streakType === 'win' ? 'W' : 'L'}${this.currentStreak}`;
+                    document.getElementById('currentStreak').textContent = streakDisplay;
+                } else {
+                    document.getElementById('currentStreak').textContent = '--';
+                }
+            }
+
+            addToCrashHistory(value) {
+                this.crashHistory.unshift(value);
+                if (this.crashHistory.length > 20) {
+                    this.crashHistory = this.crashHistory.slice(0, 20);
+                }
+                this.updateCrashHistoryDisplay();
+            }
+
+            updateCrashHistoryDisplay() {
+                const container = document.getElementById('crashHistory');
+                
+                if (this.crashHistory.length === 0) {
+                    container.innerHTML = '<span style="color: var(--text-muted);">No crash data yet</span>';
+                    return;
+                }
+                
+                container.innerHTML = this.crashHistory
+                    .map(value => {
+                        const isWin = value >= 2.0;
+                        return `<span class="crash-value ${isWin ? 'win' : 'loss'}">${value.toFixed(2)}${isWin ? '✓' : '✗'}</span>`;
+                    })
+                    .join('');
+            }
+
+            updateConnectionStatus(status) {
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                const btn = document.getElementById('connectBtn');
+
+                dot.className = `status-dot ${status}`;
+                
+                switch (status) {
+                    case 'connected':
+                        text.textContent = 'Connected';
+                        btn.textContent = 'Disconnect';
+                        btn.className = 'button btn-danger';
+                        break;
+                    case 'connecting':
+                        text.textContent = 'Connecting...';
+                        btn.textContent = 'Connecting...';
+                        btn.disabled = true;
+                        break;
+                    default:
+                        text.textContent = 'Disconnected';
+                        btn.textContent = 'Connect';
+                        btn.className = 'button btn-primary';
+                        btn.disabled = false;
+                }
+            }
+
+            startConnectionTimer() {
+                this.connectionTimeInterval = setInterval(() => {
+                    if (this.connectionStartTime) {
+                        const elapsed = new Date() - this.connectionStartTime;
+                        const minutes = Math.floor(elapsed / 60000);
+                        const seconds = Math.floor((elapsed % 60000) / 1000);
+                        document.getElementById('connectionTime').textContent = 
+                            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+            }
+
+            stopConnectionTimer() {
+                if (this.connectionTimeInterval) {
+                    clearInterval(this.connectionTimeInterval);
+                    this.connectionTimeInterval = null;
+                    document.getElementById('connectionTime').textContent = '--';
+                }
+            }
+
+            log(message, type = 'info') {
+                const container = document.getElementById('log');
+                if (!container) return;
+
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString();
+                entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+                
+                container.appendChild(entry);
+                container.scrollTop = container.scrollHeight;
+                
+                while (container.children.length > 100) {
+                    container.removeChild(container.firstChild);
+                }
+            }
+
             testWithSampleData() {
                 this.log('Testing with sample data...', 'info');
                 
@@ -2205,66 +2100,75 @@
 
             generateSampleStats() {
                 this.log('Generating sample statistics...', 'info');
-                this.sheetsLog('Generating sample data...', 'info');
+                this.dbLog('Generating sample data...', 'info');
                 
                 const now = new Date();
-                const sampleCrashes = [];
-                
-                // Generate sample data for the last 14 days
                 for (let d = 0; d < 14; d++) {
                     const date = new Date(now);
                     date.setDate(now.getDate() - d);
                     
-                    const hours = Math.floor(Math.random() * 12) + 6; // 6-18 hours of activity per day
+                    const hours = Math.floor(Math.random() * 12) + 6;
                     const selectedHours = new Set();
                     while (selectedHours.size < hours) {
                         selectedHours.add(Math.floor(Math.random() * 24));
                     }
                     
                     selectedHours.forEach(hour => {
-                        const crashes = Math.floor(Math.random() * 50) + 10; // 10-60 crashes per hour
-                        const baseWinRate = 0.4 + Math.random() * 0.4; // 40-80% win rate
+                        const crashes = Math.floor(Math.random() * 50) + 10;
+                        const baseWinRate = 0.4 + Math.random() * 0.4;
+                        
+                        const key = `${date.toDateString()}_${hour}`;
+                        this.statistics[key] = {
+                            day: date.getDay(),
+                            hour,
+                            date: date.toDateString(),
+                            crashes: [],
+                            wins: 0,
+                            losses: 0,
+                            maxLossStreak: 0,
+                            currentLossStreak: 0
+                        };
+                        
+                        const stats = this.statistics[key];
+                        let currentLossStreak = 0;
                         
                         for (let i = 0; i < crashes; i++) {
                             const isWin = Math.random() < baseWinRate;
                             const value = isWin ? 2.0 + Math.random() * 8 : 0.1 + Math.random() * 1.9;
-                            const timestamp = new Date(date);
-                            timestamp.setHours(hour, Math.random() * 60, Math.random() * 60);
                             
-                            sampleCrashes.push({
-                                value: Math.round(value * 100) / 100, // Round to 2 decimals
-                                timestamp: timestamp.getTime(),
-                                win: isWin
-                            });
+                            stats.crashes.push({ value, timestamp: Date.now() - i * 1000, win: isWin });
+                            
+                            if (isWin) {
+                                stats.wins++;
+                                currentLossStreak = 0;
+                            } else {
+                                stats.losses++;
+                                currentLossStreak++;
+                                stats.maxLossStreak = Math.max(stats.maxLossStreak, currentLossStreak);
+                            }
                         }
                     });
                 }
                 
-                // Add sample crashes to our data
-                this.allCrashes.push(...sampleCrashes);
-                this.pendingCrashes.push(...sampleCrashes);
-                
-                // Rebuild statistics from all crash data
-                this.rebuildStatisticsFromCrashes();
-                this.updateDisplay();
-                
-                this.log(`Generated ${sampleCrashes.length} sample crashes`, 'success');
-                this.sheetsLog(`Generated ${sampleCrashes.length} sample crashes (pending sync)`, 'success');
-                this.showNotification(`Generated ${sampleCrashes.length} sample crashes!`, 'success');
+                this.saveStatistics();
+                this.updateStatsTable();
+                this.updateSummaryCards();
+                this.updateDatabaseStats();
+                this.log('Sample data generated successfully', 'success');
+                this.dbLog('Sample data generation completed', 'success');
+                this.showNotification('Sample data generated!', 'success');
             }
 
             clearStatistics() {
-                if (confirm('⚠️ This will clear all local statistics but NOT the Google Sheets data. Continue?')) {
+                if (confirm('Clear all statistics? This cannot be undone.')) {
                     this.statistics = {};
-                    this.allCrashes = [];
-                    this.sessionCrashes = [];
-                    this.crashHistory = [];
-                    this.pendingCrashes = [];
-                    
-                    this.updateDisplay();
-                    this.log('Local statistics cleared', 'warning');
-                    this.sheetsLog('Local statistics cleared', 'warning');
-                    this.showNotification('Local statistics cleared', 'info');
+                    this.saveStatistics();
+                    this.updateStatsTable();
+                    this.updateSummaryCards();
+                    this.updateDatabaseStats();
+                    this.log('Statistics cleared', 'warning');
+                    this.dbLog('All statistics cleared by user', 'warning');
+                    this.showNotification('Statistics cleared', 'info');
                 }
             }
 
@@ -2272,79 +2176,27 @@
                 document.getElementById('log').innerHTML = '';
                 this.log('Log cleared', 'info');
             }
-
-            // Logging functions
-            log(message, type = 'info') {
-                const container = document.getElementById('log');
-                if (!container) return;
-
-                const entry = document.createElement('div');
-                entry.className = `log-entry ${type}`;
-                
-                const timestamp = new Date().toLocaleTimeString();
-                entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
-                
-                container.appendChild(entry);
-                container.scrollTop = container.scrollHeight;
-                
-                while (container.children.length > 100) {
-                    container.removeChild(container.firstChild);
-                }
-            }
-
-            sheetsLog(message, type = 'info') {
-                const container = document.getElementById('sheetsLog');
-                if (!container) return;
-
-                const entry = document.createElement('div');
-                entry.className = `log-entry ${type}`;
-                
-                const timestamp = new Date().toLocaleTimeString();
-                entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
-                
-                container.appendChild(entry);
-                container.scrollTop = container.scrollHeight;
-                
-                while (container.children.length > 50) {
-                    container.removeChild(container.firstChild);
-                }
-            }
-
-            // Notification System
-            showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = `notification ${type}`;
-                notification.textContent = message;
-                
-                document.body.appendChild(notification);
-                
-                setTimeout(() => notification.classList.add('show'), 100);
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                    setTimeout(() => document.body.removeChild(notification), 300);
-                }, 3000);
-            }
         }
 
-        // Global instance
         let analytics;
 
-        // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             analytics = new SignalRAnalytics();
         });
 
-        // Tab switching function
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             
             document.getElementById(tabName + 'Tab').classList.add('active');
             event.target.classList.add('active');
+            
+            // Update database stats when switching to database tab
+            if (tabName === 'database') {
+                analytics.updateDatabaseStats();
+            }
         }
 
-        // Connection functions
         function toggleConnection() {
             if (analytics.websocket && analytics.websocket.readyState === WebSocket.OPEN) {
                 analytics.disconnect();
@@ -2353,47 +2205,18 @@
             }
         }
 
-        function testWithSampleData() { 
-            analytics.testWithSampleData(); 
-        }
+        function testWithSampleData() { analytics.testWithSampleData(); }
+        function updateStatsTable() { analytics.updateStatsTable(); }
+        function clearStatistics() { analytics.clearStatistics(); }
+        function generateSampleStats() { analytics.generateSampleStats(); }
+        function clearLog() { analytics.clearLog(); }
 
-        function clearLog() { 
-            analytics.clearLog(); 
-        }
-
-        // Statistics functions
-        function updateStatsTable() { 
-            analytics.updateStatsTable(); 
-        }
-
-        function generateSampleStats() { 
-            analytics.generateSampleStats(); 
-        }
-
-        function clearStatistics() { 
-            analytics.clearStatistics(); 
-        }
-
-        // Google Sheets functions
-        function saveConfiguration() { 
-            analytics.saveConfiguration(); 
-        }
-
-        function testSheetsConnection() { 
-            analytics.testSheetsConnection(); 
-        }
-
-        function loadFromSheets() { 
-            analytics.loadFromSheets(); 
-        }
-
-        function syncToSheets() { 
-            analytics.syncToSheets(); 
-        }
-
-        function forceSyncAll() { 
-            analytics.forceSyncAll(); 
-        }
+        // Database Management Functions
+        function exportDatabase() { analytics.exportDatabase(); }
+        function importDatabase(event) { analytics.importDatabase(event); }
+        function validateDatabase() { analytics.validateDatabase(); }
+        function compactDatabase() { analytics.compactDatabase(); }
+        function resetDatabase() { analytics.resetDatabase(); }
     </script>
 </body>
 </html>
